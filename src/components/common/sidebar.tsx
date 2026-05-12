@@ -7,7 +7,7 @@ import { IoSettingsOutline } from "react-icons/io5";
 
 function Sidebar() {
   return (
-    <div className="min-w-24 w-24 h-screen text-white p-1 bg-black">
+    <div className="min-w-24 w-24 h-screen text-white p-1 bg-black fixed left-0 top-0 bottom-0 z-10">
       <h2 className="text-2xl font-bold mb-4 flex justify-center my-4 w-full">
         <RiAiGenerate2 />
       </h2>
