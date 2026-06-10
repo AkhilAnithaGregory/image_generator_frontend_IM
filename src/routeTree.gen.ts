@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as Version_treeIndexRouteImport } from './routes/version_tree/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
-import { Route as GeneratorIndexRouteImport } from './routes/generator/index'
 import { Route as Version_treeCompareIndexRouteImport } from './routes/version_tree/compare/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -30,11 +29,6 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GeneratorIndexRoute = GeneratorIndexRouteImport.update({
-  id: '/generator/',
-  path: '/generator/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const Version_treeCompareIndexRoute =
   Version_treeCompareIndexRouteImport.update({
     id: '/version_tree/compare/',
@@ -44,14 +38,12 @@ const Version_treeCompareIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/generator/': typeof GeneratorIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/version_tree/': typeof Version_treeIndexRoute
   '/version_tree/compare/': typeof Version_treeCompareIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/generator': typeof GeneratorIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/version_tree': typeof Version_treeIndexRoute
   '/version_tree/compare': typeof Version_treeCompareIndexRoute
@@ -59,30 +51,18 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/generator/': typeof GeneratorIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/version_tree/': typeof Version_treeIndexRoute
   '/version_tree/compare/': typeof Version_treeCompareIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/generator/'
-    | '/settings/'
-    | '/version_tree/'
-    | '/version_tree/compare/'
+  fullPaths: '/' | '/settings/' | '/version_tree/' | '/version_tree/compare/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/generator'
-    | '/settings'
-    | '/version_tree'
-    | '/version_tree/compare'
+  to: '/' | '/settings' | '/version_tree' | '/version_tree/compare'
   id:
     | '__root__'
     | '/'
-    | '/generator/'
     | '/settings/'
     | '/version_tree/'
     | '/version_tree/compare/'
@@ -90,7 +70,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  GeneratorIndexRoute: typeof GeneratorIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   Version_treeIndexRoute: typeof Version_treeIndexRoute
   Version_treeCompareIndexRoute: typeof Version_treeCompareIndexRoute
@@ -119,13 +98,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/generator/': {
-      id: '/generator/'
-      path: '/generator'
-      fullPath: '/generator/'
-      preLoaderRoute: typeof GeneratorIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/version_tree/compare/': {
       id: '/version_tree/compare/'
       path: '/version_tree/compare'
@@ -138,7 +110,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  GeneratorIndexRoute: GeneratorIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   Version_treeIndexRoute: Version_treeIndexRoute,
   Version_treeCompareIndexRoute: Version_treeCompareIndexRoute,

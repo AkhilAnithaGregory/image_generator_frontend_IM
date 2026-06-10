@@ -41,7 +41,7 @@
   :root {
     --text: #9ca3af;
     --text-h: #f3f4f6;
-    --bg: #16171d;
+    --bg: #111827;
     --border: #2e303a;
     --code-bg: #1f2028;
     --accent: #c084fc;
@@ -56,6 +56,11 @@
     filter: invert(1) brightness(2);
   }
 }
+
+html, body, #root {
+  height: 100%;
+}
+
 
 #root {
   width: 1480px;

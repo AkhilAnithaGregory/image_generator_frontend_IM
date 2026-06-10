@@ -1,41 +1,55 @@
+import { useProjectStore } from "@/lib/store/useProjectStore";
 import { useImageStore } from "@/lib/store/useImageStore";
+import { Separator } from "./separator";
 
-export const HistorySideBar = ({
-  lastGeneratedImage,
-  setLastGeneratedImage,
-}) => {
-  const { images, setSelectedNodeId } = useImageStore();
+export const HistorySideBar = () => {
+  /* ✅ PROJECT DATA */
+  const { projects, currentProjectId } = useProjectStore();
+  const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  const images = currentProject?.images || [];
+
+  /* ✅ KEEP SELECTION LOGIC */
+  const { selectedNodeId, setSelectedNodeId, setLastGeneratedImage } =
+    useImageStore();
+
   return (
-    <div className="h-screen overflow-auto w-xl text-white bg-black border-x border-gray-700 p-4 space-y-3">
+    <div className="h-screen overflow-auto w-xl text-white bg-black p-4 space-y-3">
       <h3 className="text-xl">Version History</h3>
 
-      <ol className="relative border-s border-default">
-        {images?.map((img) => (
-          <li key={img.id} className="mb-10 ms-4 text-start">
-            <div
-              className={`${img.src === lastGeneratedImage ? "bg-[#374151]" : "bg-white"} absolute w-3 h-3 rounded-full mt-1.5 -start-1.5 border border-buffer`}
-            ></div>
-            <div
-              className="grid grid-cols-3 gap-2 border border-[#82defc] items-center rounded-md p-2 cursor-pointer"
-              onClick={() => {
-                setSelectedNodeId(img.id);
-                setLastGeneratedImage(img.src);
-              }}
-            >
-              <div className="w-20  col-span-1">
+      <ul>
+        {images?.filter(Boolean).map((img) => {
+          if (!img?.src) return null;
+          return (
+            <li key={img.id} className="mb-6">
+              <div
+                onClick={() => {
+                  setSelectedNodeId(img.id);
+                  setLastGeneratedImage(img.src);
+                }}
+                className={`p-2 rounded cursor-pointer ${
+                  selectedNodeId === img?.id
+                    ? "bg-gray-700"
+                    : "hover:bg-gray-800"
+                }`}
+              >
                 <img
-                  src={img.src}
-                  className="w-full h-full object-cover rounded-sm"
+                  src={img?.src}
+                  className="w-full h-40 object-cover rounded"
                 />
+
+                <div className="text-sm mt-2">
+                  <div className="text-blue-400">V {img.id.slice(-4)}</div>
+
+                  <p className="text-gray-300 text-xs">{img.prompt}</p>
+                </div>
               </div>
-              <div className="col-span-2">
-                <div className="text-[#82defc]">V {img.id}</div>
-                <p className="h-15 overflow-hidden">{img.prompt}</p>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ol>
+
+              <Separator />
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 };

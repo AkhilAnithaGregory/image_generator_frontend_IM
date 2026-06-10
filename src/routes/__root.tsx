@@ -1,13 +1,11 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import Sidebar from "@/components/common/sidebar";
-import App from "../../app";
 import "./__root.css";
 
 const RootLayout = () => (
-  <div className="flex">
+  <div className="flex h-full">
     <Sidebar />
-    {/* <App /> */}
-    <div className="pl-24">
+    <div className="pl-16 flex-1 h-full">
       <Outlet />
     </div>
   </div>

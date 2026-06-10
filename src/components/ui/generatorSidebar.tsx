@@ -1,37 +1,73 @@
-import { useState } from "react";
-import { useImageStore } from "@/lib/store/useImageStore";
+import { useEffect, useState } from "react";
 import { Button } from "./button";
 import { FaCodeFork } from "react-icons/fa6";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { GrRevert } from "react-icons/gr";
 
-export const GeneratorSideBar = ({
-  lastGeneratedImage,
-  setLastGeneratedImage,
-  onRevert,
-}) => {
-  const { nodes, edges, setGraph, addImage, selectedNodeId } = useImageStore();
-  const [images, setImages] = useState([]);
-  const [prompt, setPrompt] = useState("");
-  const [loading, setLoading] = useState(false);
+import { useProjectStore } from "@/lib/store/useProjectStore";
+import { useImageStore } from "@/lib/store/useImageStore";
 
-  const handleImageChange = (event) => {
+export const GeneratorSideBar = ({
+  onRevert,
+  getDrawingFile,
+  setLines,
+  isGenerating,
+  setIsGenerating,
+}) => {
+  /* ✅ PROJECT STORE */
+
+  const {
+    projects,
+    currentProjectId,
+    createProject,
+    addImageToProject,
+    deleteProject,
+    setCurrentProject,
+    renameProject,
+  } = useProjectStore();
+
+  /* ✅ IMAGE STORE (UI ONLY) */
+  const { selectedNodeId, setLastGeneratedImage } = useImageStore();
+
+  const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  const projectImages = currentProject?.images || [];
+
+  /* ✅ DERIVE PREVIOUS IMAGE (CRITICAL FIX) */
+  const selectedImage = projectImages.find((img) => img?.id === selectedNodeId);
+
+  const previousImageSrc =
+    selectedImage?.src || projectImages[projectImages.length - 1]?.src || null;
+
+  /* ✅ LOCAL STATE */
+  const [images, setImages] = useState<any[]>([]);
+  const [prompt, setPrompt] = useState("");
+
+  const [modelName, setModelName] = useState("gemini-3.1-flash-image-preview");
+
+  const [style, setStyle] = useState(
+    "DSLR, 85mm lens, shallow depth of field, soft natural lighting",
+  );
+
+  const [aspectRatio, setAspectRatio] = useState("1:1");
+
+  /* ✅ IMAGE UPLOAD */
+  const handleImageChange = (event: any) => {
     const files = Array.from(event.target.files);
 
-    const validImages = files.filter((file) => file.type.startsWith("image/"));
+    const validImages = files.filter((file: any) =>
+      file.type.startsWith("image/"),
+    );
 
-    if (validImages.length !== files.length) {
-      alert("Some files were not images and have been ignored.");
-    }
-
-    const imagePreviews = validImages.map((file) => ({
+    const previews = validImages.map((file: any) => ({
       file,
       preview: URL.createObjectURL(file),
     }));
 
-    setImages(imagePreviews);
+    setImages(previews);
   };
 
+  /* ✅ GENERATE */
   const handleSubmit = async () => {
     if (!prompt.trim() && images.length === 0) {
       alert("Enter prompt or upload image");
@@ -40,181 +76,247 @@ export const GeneratorSideBar = ({
 
     const formData = new FormData();
 
+    /* ✅ uploaded images */
     images.forEach((img) => {
       formData.append("images", img.file);
     });
 
-    formData.append("prompt", prompt);
+    /* ✅ ✅ IMPORTANT FIX — USE DERIVED IMAGE */
+    if (previousImageSrc) {
+      const blob = await fetch(previousImageSrc).then((r) => r.blob());
 
-    if (lastGeneratedImage) {
-      const blob = await fetch(lastGeneratedImage).then((r) => r.blob());
       formData.append("previousImage", blob, "previous-image.png");
     }
 
-    try {
-      setLoading(true);
+    /* ✅ drawing */
+    const drawingFile = await getDrawingFile?.();
+    if (drawingFile) {
+      formData.append("drawing", drawingFile);
+    }
 
-      const response = await fetch("https://image-generator-backend-im.onrender.com/generate", {
+    /* ✅ params */
+    formData.append("prompt", prompt);
+    formData.append("aspectRatio", aspectRatio);
+    formData.append("modelName", modelName);
+    formData.append("style", style);
+
+    try {
+      setIsGenerating(true);
+
+      const response = await fetch("http://localhost:3001/generate/generate", {
         method: "POST",
         body: formData,
       });
 
       const data = await response.json();
 
-      const imageSrc = data.image;
-
-      const newNodeId = `node-${Date.now()}`;
-
-      const newNode = {
-        id: newNodeId,
-        data: {
-          label: (
-            <div style={{ textAlign: "center" }}>
-              <img
-                src={imageSrc}
-                width={140}
-                style={{
-                  borderRadius: 8,
-                  objectFit: "cover",
-                }}
-              />
-              <div style={{ fontSize: 12, marginTop: 8 }}>
-                {prompt || "No prompt"}
-              </div>
-            </div>
-          ),
-        },
-        position: { x: 0, y: 0 },
+      const imageObj = {
+        id: `node-${Date.now()}`,
+        src: data.image,
+        prompt,
+        parentId:
+          selectedNodeId || projectImages[projectImages.length - 1]?.id || null,
+        previousImage: previousImageSrc,
+        uploadedImages: data.uploadedImages || [],
+        drawingImage: data.drawingImage || null,
+        modelName: data.modelName,
+        aspectRatio: data.aspectRatio,
+        generatedAt: Date.now(),
       };
 
-      const parentId = selectedNodeId || nodes[nodes.length - 1]?.id;
+      /* ✅ PROJECT STORE UPDATE */
+      if (!currentProjectId) {
+        createProject(prompt, imageObj);
+      } else {
+        addImageToProject(imageObj);
 
-      let newEdge = null;
+        // ✅ rename ONLY if project still has default name
+        const project = projects.find((p) => p.id === currentProjectId);
 
-      if (parentId) {
-        newEdge = {
-          id: `e-${parentId}-${newNodeId}`,
-          source: parentId,
-          target: newNodeId,
-        };
+        if (project && project.name === "New Project") {
+          const generateNameFromPrompt = (text) => {
+            if (!text || !text.trim()) return "New Project";
+
+            return (
+              text
+                .toLowerCase()
+                .replace(/[^a-z\s]/g, "")
+                .split(" ")
+                .filter(
+                  (word) =>
+                    word.length > 2 &&
+                    ![
+                      "the",
+                      "and",
+                      "with",
+                      "for",
+                      "from",
+                      "this",
+                      "that",
+                    ].includes(word),
+                )
+                .slice(0, 3)
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(" ") || "New Project"
+            );
+          };
+
+          const newName = generateNameFromPrompt(prompt);
+
+          renameProject(currentProjectId, newName);
+        }
       }
 
-      const updatedNodes = [...nodes, newNode];
-      const updatedEdges = newEdge ? [...edges, newEdge] : edges;
+      /* ✅ update UI state */
+      setLastGeneratedImage(data.image);
 
-      setGraph(updatedNodes, updatedEdges);
-
-      addImage({
-        id: newNodeId,
-        src: imageSrc,
-        prompt,
-        parentId,
-      });
-
-      setLastGeneratedImage(imageSrc);
       setPrompt("");
       setImages([]);
     } catch (err) {
       console.error(err);
       alert("Generation failed");
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
+      setLines([]);
     }
   };
 
+  useEffect(() => {
+    if (!currentProjectId) return;
+
+    const project = projects.find((p) => p.id === currentProjectId);
+
+    if (!project?.images?.length) return;
+
+    const last = project.images[project.images.length - 1];
+
+    setLastGeneratedImage(last?.src);
+  }, [currentProjectId]);
+
   return (
-    <div className="h-screen min-w-75 w-75 flex flex-col justify-between text-white bg-black border-x border-gray-700 p-4 text-start space-y-3">
+    <div className="h-screen min-w-75 w-75 flex flex-col justify-between bg-black text-white border-x border-gray-700 p-4 space-y-3">
+      {/* INPUT */}
       <div>
-        <div className="space-y-3">
-          <h3 className="text-xl">Version History</h3>
-          <textarea
-            rows={3}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                handleSubmit();
-              }
-            }}
-            className="border focus:outline-none ring-0 rounded-md p-2 w-full"
-          />
-        </div>
-        <div className="space-y-3">
-          <h4 className="text-md">AI Model</h4>
-          <select className="border focus:outline-none ring-0 rounded-md p-2 w-full">
-            <option value="gemini-3.1-flash-image-preview">
-              Gemini 3.1 Flash Image Preview
+        <h3 className="text-xl mb-2">AI Image</h3>
+
+        <select
+          value={currentProjectId || ""}
+          onChange={(e) => setCurrentProject(e.target.value)}
+          className="mb-3 w-full p-2 bg-gray-800"
+        >
+          <option value="">Select Project</option>
+
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
             </option>
-            <option value="gemini-3-pro-image-preview">
-              Gemini 3 Pro Image Preview
-            </option>
-            <option value="gemini-2.5-flash-image">
-              Gemini 2.5 Flash Image
-            </option>
-            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-          </select>
-        </div>
-        <div className="space-y-3">
-          <h4 className="text-md">Setup</h4>
-          <select className="border focus:outline-none ring-0 rounded-md p-2 w-full">
-            <option value="DSLR, 85mm lens, shallow depth of field, soft natural lighting, sharp focus on subject">
-              Portrait
-            </option>
-            <option value="wide angle lens, 16mm, deep depth of field, natural lighting, highly detailed">
-              Landscape
-            </option>
-            <option value="cinematic lighting, anamorphic lens, film still, dramatic shadows, depth of field">
-              Cinematic
-            </option>
-            <option value="macro lens, studio lighting, ultra sharp, clean background, high detail">
-              Product / Close-up
-            </option>
-          </select>
-        </div>
-        <div className="space-y-3">
-          <h4 className="text-md">Aspect Ratio</h4>
-          <select className="border focus:outline-none ring-0 rounded-md p-2 w-full">
-            <option value="volvo">16:9</option>
-          </select>
-        </div>
+          ))}
+        </select>
+        <textarea
+          rows={3}
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
+          className="border rounded-md p-2 w-full bg-gray-900"
+        />
+
+        {/* MODEL */}
+        <select
+          value={modelName}
+          onChange={(e) => setModelName(e.target.value)}
+          className="mt-3 w-full p-2 bg-gray-800"
+        >
+          <option value="gemini-3.1-flash-image-preview">Gemini Flash</option>
+        </select>
+
+        {/* STYLE */}
+        <select
+          value={style}
+          onChange={(e) => setStyle(e.target.value)}
+          className="mt-3 w-full p-2 bg-gray-800"
+        >
+          <option value="portrait">Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select>
+
+        {/* ASPECT */}
+        <select
+          value={aspectRatio}
+          onChange={(e) => setAspectRatio(e.target.value)}
+          className="mt-3 w-full p-2 bg-gray-800"
+        >
+          <option value="1:1">1:1</option>
+          <option value="16:9">16:9</option>
+        </select>
       </div>
-      <div className="flex flex-col space-y-4">
-        <div className="flex items-center gap-x-4 overflow-x-auto max-w-full">
-          {images.map((img: { preview: string }, index) => (
-            <div key={index} className="text-center shrink-0">
-              <img
-                src={img.preview}
-                alt={`preview-${index}`}
-                className="w-25 h-25 object-cover rounded-lg border border-gray-300"
-              />
-            </div>
+
+      {/* FOOTER */}
+      <div className="space-y-3">
+        <div className="flex gap-2">
+          {images.map((img, i) => (
+            <img key={i} src={img.preview} className="w-16" />
           ))}
         </div>
-        <div className="w-full relative">
-          <Button variant="imgButton">
-            <IoCloudUploadOutline />
-            Upload file
+
+        <div className="relative">
+          <Button>
+            <IoCloudUploadOutline /> Upload
           </Button>
           <input
-            className="opacity-0 absolute top-0 left-0 right-0 bottom-0"
             type="file"
-            accept="image/*"
             multiple
+            className="absolute inset-0 opacity-0"
             onChange={handleImageChange}
           />
         </div>
-        <Button variant="primary" onClick={handleSubmit} disabled={loading}>
-          {loading ? "Generating..." : "Generate"}
+
+        <Button onClick={handleSubmit} disabled={isGenerating}>
+          {isGenerating ? "Generating..." : "Generate"}
         </Button>
-        <div className="grid grid-cols-2 items-center gap-x-3 w-full">
-          <Button variant="imgButton">
-            <FaCodeFork />
-            Fork
+
+        <div className="grid grid-cols-2 gap-2">
+          <Button>
+            <FaCodeFork /> Fork
           </Button>
-          <Button variant="imgButton" onClick={onRevert}>
-            <GrRevert />
-            Revert
+
+          <Button onClick={onRevert}>
+            <GrRevert /> Revert
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {/* ✅ NEW PROJECT */}
+          <Button
+            onClick={() => {
+              createProject("New Project", null); // ✅ keep simple
+            }}
+          >
+            ➕ New
+          </Button>
+
+          {/* ✅ DELETE PROJECT */}
+          <Button
+            onClick={() => {
+              if (!currentProjectId) return;
+
+              const remaining = projects.filter(
+                (p) => p.id !== currentProjectId,
+              );
+
+              deleteProject(currentProjectId);
+
+              if (remaining.length > 0) {
+                setCurrentProject(remaining[0].id); // ✅ switch to another project
+              } else {
+                setCurrentProject(null); // ✅ fallback (empty state)
+              }
+            }}
+          >
+            🗑 Delete
           </Button>
         </div>
       </div>

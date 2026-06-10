@@ -1,0 +1,225 @@
+import { Button } from "@/components/ui/button";
+import { RiAiGenerate2 } from "react-icons/ri";
+import { LuImagePlus } from "react-icons/lu";
+import { useState } from "react";
+import { useProjectStore } from "@/lib/store/useProjectStore";
+
+export const UiBeforeCompile = () => {
+  const [images, setImages] = useState<any[]>([]);
+  const [prompt, setPrompt] = useState("");
+
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const [modelName, setModelName] = useState(
+    "gemini-3.1-flash-image-preview"
+  );
+  const [style, setStyle] = useState(
+    "DSLR, 85mm lens, shallow depth of field, soft natural lighting"
+  );
+  const [aspectRatio, setAspectRatio] = useState("1:1");
+
+  const { createProject } = useProjectStore();
+
+  /* ✅ IMAGE UPLOAD */
+  const handleImageChange = (event: any) => {
+    const files = Array.from(event.target.files);
+
+    const previews = files
+      .filter((file: any) => file.type.startsWith("image/"))
+      .map((file: any) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+
+    setImages(previews);
+  };
+
+  /* ✅ GENERATE FIRST PROJECT */
+  const handleGenerate = async () => {
+    if (!prompt.trim() && images.length === 0) {
+      alert("Enter prompt or upload image");
+      return;
+    }
+
+    const formData = new FormData();
+
+    images.forEach((img) => {
+      formData.append("images", img.file);
+    });
+
+    formData.append("prompt", prompt);
+    formData.append("aspectRatio", aspectRatio);
+    formData.append("modelName", modelName);
+    formData.append("style", style);
+
+    try {
+      setIsGenerating(true);
+
+      const response = await fetch(
+        "http://localhost:3001/generate/generate",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      const newImage = {
+        id: `node-${Date.now()}`,
+        src: data.image,
+        prompt,
+        parentId: null,
+        previousImage: null,
+        uploadedImages: data.uploadedImages || [],
+        drawingImage: data.drawingImage || null,
+        modelName: data.modelName,
+        aspectRatio: data.aspectRatio,
+        generatedAt: Date.now(),
+      };
+
+      /* ✅ ✅ CREATE PROJECT ONLY (NO setGraph) */
+      createProject(prompt, newImage);
+
+      setPrompt("");
+      setImages([]);
+    } catch (err) {
+      console.error(err);
+      alert("Generation failed");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="h-screen w-screen flex flex-col justify-center items-center text-white">
+
+      {/* ✅ TITLE */}
+      <span className="text-5xl font-bold">
+        Free AI Image Generator
+      </span>
+
+      <p className="text-xl py-5 text-gray-300">
+        Turn your ideas into images quickly using descriptions
+      </p>
+
+      {/* ✅ MAIN CARD */}
+      <div className="shadow-[0_20px_50px_rgba(8,112,184,0.7)] rounded-xl w-1/2 p-10 bg-[#0f172a]">
+
+        {/* ✅ INPUT AREA */}
+        <div className="flex items-start gap-x-5 pb-4">
+
+          {/* ✅ IMAGE UPLOAD */}
+          <div className="relative outline-dashed outline-[#334155] rounded-md w-40 h-40 bg-[#1f2937]">
+
+            <input
+              type="file"
+              multiple
+              onChange={handleImageChange}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+            />
+
+            <span className="absolute top-2 right-2 text-gray-400 text-sm">
+              {images.length}/4
+            </span>
+
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <LuImagePlus size={30} />
+              <span>Image refs</span>
+            </div>
+          </div>
+
+          {/* ✅ PROMPT */}
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={4}
+            className="w-full text-lg resize-none bg-transparent outline-none text-white placeholder-gray-400"
+            placeholder={`Generate or edit images with just a description.
+
+Example:
+- A futuristic city at sunset
+- Remove object from image`}
+          />
+        </div>
+
+        {/* ✅ MODEL */}
+        <div className="mb-3">
+          <label className="text-sm text-gray-400 block mb-1">
+            AI Model
+          </label>
+          <select
+            value={modelName}
+            onChange={(e) => setModelName(e.target.value)}
+            className="w-full p-2 bg-gray-800 rounded"
+          >
+            <option value="gemini-3.1-flash-image-preview">
+              Gemini 3.1 Flash
+            </option>
+            <option value="gemini-3-pro-image-preview">
+              Gemini 3 Pro
+            </option>
+          </select>
+        </div>
+
+        {/* ✅ STYLE */}
+        <div className="mb-3">
+          <label className="text-sm text-gray-400 block mb-1">
+            Style
+          </label>
+          <select
+            value={style}
+            onChange={(e) => setStyle(e.target.value)}
+            className="w-full p-2 bg-gray-800 rounded"
+          >
+            <option value="DSLR, 85mm lens, shallow depth of field, soft natural lighting">
+              Portrait
+            </option>
+            <option value="wide angle, landscape, natural lighting">
+              Landscape
+            </option>
+          </select>
+        </div>
+
+        {/* ✅ ASPECT RATIO */}
+        <div className="mb-3">
+          <label className="text-sm text-gray-400 block mb-1">
+            Aspect Ratio
+          </label>
+          <select
+            value={aspectRatio}
+            onChange={(e) => setAspectRatio(e.target.value)}
+            className="w-full p-2 bg-gray-800 rounded"
+          >
+            <option value="1:1">1:1</option>
+            <option value="16:9">16:9</option>
+            <option value="9:16">9:16</option>
+          </select>
+        </div>
+
+        {/* ✅ PREVIEW */}
+        <div className="flex gap-2 mb-4 overflow-x-auto">
+          {images.map((img, i) => (
+            <img
+              key={i}
+              src={img.preview}
+              className="w-16 h-16 rounded"
+            />
+          ))}
+        </div>
+
+        {/* ✅ GENERATE BUTTON */}
+        <div className="flex justify-end">
+          <Button
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="bg-blue-500 hover:bg-blue-600 text-white text-lg px-10 flex items-center gap-x-2"
+          >
+            <RiAiGenerate2 size={24} />
+            {isGenerating ? "Generating..." : "Generate"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
