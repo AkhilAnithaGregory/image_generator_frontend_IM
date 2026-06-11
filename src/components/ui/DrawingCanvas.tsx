@@ -1,10 +1,20 @@
 import React, { useRef } from "react";
 import { Stage, Layer, Line } from "react-konva";
+import type Konva from "konva";
 
 export type LineType = {
   tool: "pen" | "eraser";
   points: number[];
 };
+
+interface DrawingCanvasProps {
+  stageRef: React.RefObject<Konva.Stage | null>;
+  width: number;
+  height: number;
+  tool: "pen" | "eraser";
+  lines: LineType[];
+  setLines: React.Dispatch<React.SetStateAction<LineType[]>>;
+}
 
 export default function DrawingCanvas({
   stageRef,
@@ -13,27 +23,30 @@ export default function DrawingCanvas({
   tool,
   lines,
   setLines,
-}) {
+}: DrawingCanvasProps) {
   const isDrawing = useRef(false);
 
-  const handleMouseDown = (e) => {
+  const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
     isDrawing.current = true;
 
-    const pos = e.target.getStage().getPointerPosition();
+    const pos = e.target.getStage()?.getPointerPosition();
+    if (!pos) return;
 
     setLines((prev) => [...prev, { tool, points: [pos.x, pos.y] }]);
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (!isDrawing.current) return;
 
     const stage = e.target.getStage();
-    const point = stage.getPointerPosition();
+    const point = stage?.getPointerPosition();
+    if (!point) return;
 
     setLines((prev) => {
       const last = prev[prev.length - 1];
+      if (!last) return prev;
 
-      const updated = {
+      const updated: LineType = {
         ...last,
         points: [...last.points, point.x, point.y],
       };
@@ -48,7 +61,7 @@ export default function DrawingCanvas({
 
   return (
     <Stage
-      ref={stageRef} // 🔥 IMPORTANT FIX
+      ref={stageRef}
       width={width}
       height={height}
       onMouseDown={handleMouseDown}

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useProjectStore } from "@/lib/store/useProjectStore";
 
 export const UiBeforeCompile = () => {
-  const [images, setImages] = useState<any[]>([]);
+  const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
   const [prompt, setPrompt] = useState("");
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -20,21 +20,22 @@ export const UiBeforeCompile = () => {
 
   const { createProject } = useProjectStore();
 
-  /* ✅ IMAGE UPLOAD */
-  const handleImageChange = (event: any) => {
-    const files = Array.from(event.target.files);
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = event.target.files;
+    if (!fileList) return;
+
+    const files = Array.from(fileList) as File[];
 
     const previews = files
-      .filter((file: any) => file.type.startsWith("image/"))
-      .map((file: any) => ({
+      .filter((file) => file.type.startsWith("image/"))
+      .map((file) => ({
         file,
         preview: URL.createObjectURL(file),
       }));
 
-    setImages(previews);
+    setImages(previews.slice(0, 4));
   };
 
-  /* ✅ GENERATE FIRST PROJECT */
   const handleGenerate = async () => {
     if (!prompt.trim() && images.length === 0) {
       alert("Enter prompt or upload image");
@@ -78,7 +79,6 @@ export const UiBeforeCompile = () => {
         generatedAt: Date.now(),
       };
 
-      /* ✅ ✅ CREATE PROJECT ONLY (NO setGraph) */
       createProject(prompt, newImage);
 
       setPrompt("");
@@ -94,22 +94,18 @@ export const UiBeforeCompile = () => {
   return (
     <div className="h-screen w-screen flex flex-col justify-center items-center text-white">
 
-      {/* ✅ TITLE */}
       <span className="text-5xl font-bold">
-        Free AI Image Generator
+        NEXORA - Free AI Image Generator
       </span>
 
       <p className="text-xl py-5 text-gray-300">
         Turn your ideas into images quickly using descriptions
       </p>
 
-      {/* ✅ MAIN CARD */}
       <div className="shadow-[0_20px_50px_rgba(8,112,184,0.7)] rounded-xl w-1/2 p-10 bg-[#0f172a]">
 
-        {/* ✅ INPUT AREA */}
         <div className="flex items-start gap-x-5 pb-4">
 
-          {/* ✅ IMAGE UPLOAD */}
           <div className="relative outline-dashed outline-[#334155] rounded-md w-40 h-40 bg-[#1f2937]">
 
             <input
@@ -129,7 +125,6 @@ export const UiBeforeCompile = () => {
             </div>
           </div>
 
-          {/* ✅ PROMPT */}
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -137,13 +132,12 @@ export const UiBeforeCompile = () => {
             className="w-full text-lg resize-none bg-transparent outline-none text-white placeholder-gray-400"
             placeholder={`Generate or edit images with just a description.
 
-Example:
-- A futuristic city at sunset
-- Remove object from image`}
+            Example:
+            - A futuristic city at sunset
+            - Remove object from image`}
           />
         </div>
 
-        {/* ✅ MODEL */}
         <div className="mb-3">
           <label className="text-sm text-gray-400 block mb-1">
             AI Model
@@ -162,7 +156,6 @@ Example:
           </select>
         </div>
 
-        {/* ✅ STYLE */}
         <div className="mb-3">
           <label className="text-sm text-gray-400 block mb-1">
             Style
@@ -181,7 +174,6 @@ Example:
           </select>
         </div>
 
-        {/* ✅ ASPECT RATIO */}
         <div className="mb-3">
           <label className="text-sm text-gray-400 block mb-1">
             Aspect Ratio
@@ -197,7 +189,6 @@ Example:
           </select>
         </div>
 
-        {/* ✅ PREVIEW */}
         <div className="flex gap-2 mb-4 overflow-x-auto">
           {images.map((img, i) => (
             <img
@@ -208,7 +199,6 @@ Example:
           ))}
         </div>
 
-        {/* ✅ GENERATE BUTTON */}
         <div className="flex justify-end">
           <Button
             onClick={handleGenerate}

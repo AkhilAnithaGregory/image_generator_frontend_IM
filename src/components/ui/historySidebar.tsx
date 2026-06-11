@@ -3,13 +3,10 @@ import { useImageStore } from "@/lib/store/useImageStore";
 import { Separator } from "./separator";
 
 export const HistorySideBar = () => {
-  /* ✅ PROJECT DATA */
   const { projects, currentProjectId } = useProjectStore();
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
   const images = currentProject?.images || [];
-
-  /* ✅ KEEP SELECTION LOGIC */
   const { selectedNodeId, setSelectedNodeId, setLastGeneratedImage } =
     useImageStore();
 

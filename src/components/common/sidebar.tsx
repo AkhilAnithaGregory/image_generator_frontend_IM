@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { RiAiGenerate2 } from "react-icons/ri";
-import { IoHomeOutline } from "react-icons/io5";
 import { RiImageCircleAiLine } from "react-icons/ri";
 import { PiTreeStructure } from "react-icons/pi";
 import { IoSettingsOutline } from "react-icons/io5";

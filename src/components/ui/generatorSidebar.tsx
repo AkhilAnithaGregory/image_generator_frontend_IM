@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./button";
 import { FaCodeFork } from "react-icons/fa6";
 import { IoCloudUploadOutline } from "react-icons/io5";
@@ -6,15 +6,23 @@ import { GrRevert } from "react-icons/gr";
 
 import { useProjectStore } from "@/lib/store/useProjectStore";
 import { useImageStore } from "@/lib/store/useImageStore";
+import type { LineType } from "./DrawingCanvas";
 
-export const GeneratorSideBar = ({
+interface GeneratorSideBarProps {
+  onRevert: () => void;
+  getDrawingFile?: () => Promise<File | null> | File | null;
+  setLines: React.Dispatch<React.SetStateAction<LineType[]>>;
+  isGenerating: boolean;
+  setIsGenerating: (v: boolean) => void;
+}
+
+export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
   onRevert,
   getDrawingFile,
   setLines,
   isGenerating,
   setIsGenerating,
 }) => {
-  /* ✅ PROJECT STORE */
 
   const {
     projects,
@@ -26,21 +34,18 @@ export const GeneratorSideBar = ({
     renameProject,
   } = useProjectStore();
 
-  /* ✅ IMAGE STORE (UI ONLY) */
   const { selectedNodeId, setLastGeneratedImage } = useImageStore();
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
   const projectImages = currentProject?.images || [];
 
-  /* ✅ DERIVE PREVIOUS IMAGE (CRITICAL FIX) */
   const selectedImage = projectImages.find((img) => img?.id === selectedNodeId);
 
   const previousImageSrc =
     selectedImage?.src || projectImages[projectImages.length - 1]?.src || null;
 
-  /* ✅ LOCAL STATE */
-  const [images, setImages] = useState<any[]>([]);
+  const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
   const [prompt, setPrompt] = useState("");
 
   const [modelName, setModelName] = useState("gemini-3.1-flash-image-preview");
@@ -51,23 +56,22 @@ export const GeneratorSideBar = ({
 
   const [aspectRatio, setAspectRatio] = useState("1:1");
 
-  /* ✅ IMAGE UPLOAD */
-  const handleImageChange = (event: any) => {
-    const files = Array.from(event.target.files);
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = event.target.files;
+    if (!fileList) return;
 
-    const validImages = files.filter((file: any) =>
-      file.type.startsWith("image/"),
-    );
+    const files = Array.from(fileList) as File[];
 
-    const previews = validImages.map((file: any) => ({
+    const validImages = files.filter((file) => file.type.startsWith("image/"));
+
+    const previews = validImages.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
     }));
 
-    setImages(previews);
+    setImages(previews.slice(0, 4));
   };
 
-  /* ✅ GENERATE */
   const handleSubmit = async () => {
     if (!prompt.trim() && images.length === 0) {
       alert("Enter prompt or upload image");
@@ -76,25 +80,21 @@ export const GeneratorSideBar = ({
 
     const formData = new FormData();
 
-    /* ✅ uploaded images */
     images.forEach((img) => {
       formData.append("images", img.file);
     });
 
-    /* ✅ ✅ IMPORTANT FIX — USE DERIVED IMAGE */
     if (previousImageSrc) {
       const blob = await fetch(previousImageSrc).then((r) => r.blob());
 
       formData.append("previousImage", blob, "previous-image.png");
     }
 
-    /* ✅ drawing */
     const drawingFile = await getDrawingFile?.();
     if (drawingFile) {
       formData.append("drawing", drawingFile);
     }
 
-    /* ✅ params */
     formData.append("prompt", prompt);
     formData.append("aspectRatio", aspectRatio);
     formData.append("modelName", modelName);
@@ -124,17 +124,15 @@ export const GeneratorSideBar = ({
         generatedAt: Date.now(),
       };
 
-      /* ✅ PROJECT STORE UPDATE */
       if (!currentProjectId) {
         createProject(prompt, imageObj);
       } else {
         addImageToProject(imageObj);
 
-        // ✅ rename ONLY if project still has default name
         const project = projects.find((p) => p.id === currentProjectId);
 
         if (project && project.name === "New Project") {
-          const generateNameFromPrompt = (text) => {
+          const generateNameFromPrompt = (text: string) => {
             if (!text || !text.trim()) return "New Project";
 
             return (
@@ -167,7 +165,6 @@ export const GeneratorSideBar = ({
         }
       }
 
-      /* ✅ update UI state */
       setLastGeneratedImage(data.image);
 
       setPrompt("");
@@ -195,7 +192,6 @@ export const GeneratorSideBar = ({
 
   return (
     <div className="h-screen min-w-75 w-75 flex flex-col justify-between bg-black text-white border-x border-gray-700 p-4 space-y-3">
-      {/* INPUT */}
       <div>
         <h3 className="text-xl mb-2">AI Image</h3>
 
@@ -225,7 +221,6 @@ export const GeneratorSideBar = ({
           className="border rounded-md p-2 w-full bg-gray-900"
         />
 
-        {/* MODEL */}
         <select
           value={modelName}
           onChange={(e) => setModelName(e.target.value)}
@@ -234,7 +229,6 @@ export const GeneratorSideBar = ({
           <option value="gemini-3.1-flash-image-preview">Gemini Flash</option>
         </select>
 
-        {/* STYLE */}
         <select
           value={style}
           onChange={(e) => setStyle(e.target.value)}
@@ -244,7 +238,6 @@ export const GeneratorSideBar = ({
           <option value="landscape">Landscape</option>
         </select>
 
-        {/* ASPECT */}
         <select
           value={aspectRatio}
           onChange={(e) => setAspectRatio(e.target.value)}
@@ -255,7 +248,6 @@ export const GeneratorSideBar = ({
         </select>
       </div>
 
-      {/* FOOTER */}
       <div className="space-y-3">
         <div className="flex gap-2">
           {images.map((img, i) => (
@@ -289,7 +281,7 @@ export const GeneratorSideBar = ({
           </Button>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {/* ✅ NEW PROJECT */}
+
           <Button
             onClick={() => {
               createProject("New Project", null); // ✅ keep simple
@@ -298,7 +290,6 @@ export const GeneratorSideBar = ({
             ➕ New
           </Button>
 
-          {/* ✅ DELETE PROJECT */}
           <Button
             onClick={() => {
               if (!currentProjectId) return;
@@ -310,9 +301,9 @@ export const GeneratorSideBar = ({
               deleteProject(currentProjectId);
 
               if (remaining.length > 0) {
-                setCurrentProject(remaining[0].id); // ✅ switch to another project
+                setCurrentProject(remaining[0].id); 
               } else {
-                setCurrentProject(null); // ✅ fallback (empty state)
+                setCurrentProject(null); 
               }
             }}
           >

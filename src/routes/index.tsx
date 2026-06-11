@@ -9,17 +9,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { revertCurrentImage, lastGeneratedImage } = useImageStore();
+  const { revertCurrentImage } = useImageStore();
 
-  const { projects, currentProjectId } = useProjectStore();
+  const { currentProjectId } = useProjectStore();
 
-  const currentProject = projects.find((p) => p.id === currentProjectId);
-
-  const images = currentProject?.images || [];
-
-  const latestImage = images[images.length - 1];
-  const currentImage = latestImage || lastGeneratedImage;
-  console.log("latestImage", latestImage?.src);
   if (!currentProjectId) {
     return <UiBeforeCompile />;
   }

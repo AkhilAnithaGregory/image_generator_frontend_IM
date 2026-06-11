@@ -1,10 +1,13 @@
-import Lottie from "lottie-react"
+import Lottie from "lottie-react";
 
-export default function AnimationComponent({ animationData }) {
-  console.log(Lottie);
+interface AnimationProps {
+  animationData?: unknown;
+}
+
+export default function AnimationComponent({ animationData }: AnimationProps) {
   return (
     <Lottie
-      animationData={animationData}
+      animationData={animationData as unknown}
       loop={true}
       style={{
         width: 300,

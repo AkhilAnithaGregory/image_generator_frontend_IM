@@ -1,12 +1,20 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { ImageItem } from "./useProjectStore";
 
-export const useCompareStore = create(
+interface CompareStoreState {
+  compareList: ImageItem[];
+  addToCompare: (img: ImageItem) => void;
+  removeFromCompare: (id: string) => void;
+  clearCompare: () => void;
+}
+
+export const useCompareStore = create<CompareStoreState>()(
   persist(
     (set) => ({
       compareList: [],
 
-      addToCompare: (img) =>
+      addToCompare: (img: ImageItem) =>
         set((state) => {
           if (state.compareList.find((i) => i.id === img.id)) {
             return state;
@@ -18,10 +26,10 @@ export const useCompareStore = create(
 
           return {
             compareList: [...state.compareList, img],
-          };
+          } as Partial<CompareStoreState> as CompareStoreState;
         }),
 
-      removeFromCompare: (id) =>
+      removeFromCompare: (id: string) =>
         set((state) => ({
           compareList: state.compareList.filter((i) => i.id !== id),
         })),
@@ -29,7 +37,7 @@ export const useCompareStore = create(
       clearCompare: () => set({ compareList: [] }),
     }),
     {
-      name: "compare-storage", 
+      name: "compare-storage",
     }
   )
 );

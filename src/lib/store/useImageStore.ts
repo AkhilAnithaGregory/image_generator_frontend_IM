@@ -4,21 +4,21 @@ import { persist } from "zustand/middleware";
 type ImageItem = {
   id: string;
   src: string | null;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 type NodeItem = {
   id: string;
-  data?: any;
+  data?: unknown;
   position?: { x: number; y: number };
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 type EdgeItem = {
   id: string;
   source: string;
   target: string;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 interface ImageStoreState {
@@ -43,7 +43,7 @@ interface ImageStoreState {
 
 export const useImageStore = create<ImageStoreState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       images: [],
       nodes: [],
       edges: [],

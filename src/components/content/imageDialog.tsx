@@ -1,7 +1,21 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import type { ImageItem } from "@/lib/store/useProjectStore";
 
-function ImageDialog({ open, setOpen, selectedImage }) {
-  console.log("selectedImage", selectedImage);
+type SelectedImage = ImageItem & {
+  previousImage?: string | null;
+  drawingImage?: string | null;
+  modelName?: string | null;
+  aspectRatio?: string | null;
+  uploadedImages?: string[];
+};
+
+interface ImageDialogProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  selectedImage?: SelectedImage | null;
+}
+
+function ImageDialog({ open, setOpen, selectedImage }: ImageDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="min-w-lvh bg-white">
@@ -39,7 +53,7 @@ function ImageDialog({ open, setOpen, selectedImage }) {
               <h3 className="mb-2 font-semibold">Generated Result</h3>
 
               <img
-                src={selectedImage.src}
+                src={selectedImage.src || ""}
                 alt="generated"
                 className="w-full border rounded"
               />
@@ -68,7 +82,7 @@ function ImageDialog({ open, setOpen, selectedImage }) {
             <p>{selectedImage.aspectRatio}</p>
           </div>
         )}
-        {selectedImage?.uploadedImages?.length > 0 && (
+        {(selectedImage?.uploadedImages?.length ?? 0) > 0 && (
           <div className="mt-4">
             <p className="text-sm text-muted-foreground">Uploaded Images</p>
             <span className="flex items-start flex-wrap">

@@ -1,6 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useRef, useEffect } from "react";
-import ReactFlow, { Background, Controls, Handle, Position } from "reactflow";
+import ReactFlow, {
+  Background,
+  Controls,
+  Handle,
+  Position,
+  type Node,
+  type Edge,
+} from "reactflow";
+import type { ImageItem } from "@/lib/store/useProjectStore";
 import dagre from "dagre";
 import "reactflow/dist/style.css";
 import { useImageStore } from "@/lib/store/useImageStore";
@@ -15,9 +23,7 @@ export const Route = createFileRoute("/version_tree/")({
 const nodeWidth = 160;
 const nodeHeight = 100;
 
-/* ✅ CUSTOM NODE */
-
-const CustomNode = ({ data }) => {
+const CustomNode: React.FC<{ data: { img?: ImageItem } }> = ({ data }) => {
   return (
     <div
       style={{
@@ -38,13 +44,11 @@ const CustomNode = ({ data }) => {
         e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
       }}
     >
-      {/* ✅ TOP HANDLE */}
       <Handle type="target" position={Position.Top} />
 
-      {/* ✅ IMAGE */}
       <div style={{ width: "100%", height: 90, overflow: "hidden" }}>
         <img
-          src={data.img?.src}
+          src={data.img?.src || ""}
           alt="img"
           style={{
             width: "100%",
@@ -54,7 +58,6 @@ const CustomNode = ({ data }) => {
         />
       </div>
 
-      {/* ✅ TEXT / LABEL */}
       <div
         style={{
           padding: "6px 8px",
@@ -69,14 +72,12 @@ const CustomNode = ({ data }) => {
         {data.img?.prompt || "Generated Image"}
       </div>
 
-      {/* ✅ BOTTOM HANDLE */}
       <Handle type="source" position={Position.Bottom} />
     </div>
   );
 };
 
-/* ✅ DAGRE LAYOUT */
-const getLayoutedElements = (nodes, edges) => {
+const getLayoutedElements = (nodes: Node[], edges: Edge[]): Node[] => {
   const graph = new dagre.graphlib.Graph();
   graph.setDefaultEdgeLabel(() => ({}));
   graph.setGraph({ rankdir: "TB" });
@@ -92,7 +93,7 @@ const getLayoutedElements = (nodes, edges) => {
   dagre.layout(graph);
 
   return nodes.map((node) => {
-    const pos = graph.node(node.id);
+    const pos: any = graph.node(node.id);
     return {
       ...node,
       position: {
@@ -103,9 +104,12 @@ const getLayoutedElements = (nodes, edges) => {
   });
 };
 
-/* ✅ PREVENT CYCLE */
-const isCycle = (images, sourceId, targetId) => {
-  let current = targetId;
+const isCycle = (
+  images: ImageItem[],
+  sourceId: string,
+  targetId: string,
+): boolean => {
+  let current: string | null | undefined = targetId;
 
   while (current) {
     if (current === sourceId) return true;
@@ -114,16 +118,19 @@ const isCycle = (images, sourceId, targetId) => {
   return false;
 };
 
-/* ✅ MOVE SUBTREE */
-const moveSubtree = (images, sourceId, newParentId) => {
+const moveSubtree = (
+  images: ImageItem[],
+  sourceId: string,
+  newParentId: string,
+): ImageItem[] => {
   const map = new Map(images.map((img) => [img.id, { ...img }]));
 
-  const update = (id) => {
+  const update = (id: string) => {
     const node = map.get(id);
     if (!node) return;
 
     if (id === sourceId) {
-      node.parentId = newParentId;
+      (node as ImageItem).parentId = newParentId;
     }
 
     images.forEach((child) => {
@@ -135,11 +142,14 @@ const moveSubtree = (images, sourceId, newParentId) => {
 
   update(sourceId);
 
-  return Array.from(map.values());
+  return Array.from(map.values()) as ImageItem[];
 };
 
-/* ✅ BUILD GRAPH */
-const buildGraph = (images, selectedNodeId, forkSource) => ({
+const buildGraph = (
+  images: ImageItem[],
+  selectedNodeId: string | null,
+  forkSource: ImageItem | null,
+): { nodes: Node[]; edges: Edge[] } => ({
   nodes: images.map((img) => ({
     id: img?.id,
     type: "custom",
@@ -189,7 +199,6 @@ function RouteComponent() {
 
   const nodeTypes = { custom: CustomNode };
 
-  /* ✅ GRAPH */
   const filteredImages = useMemo(() => {
     if (!selectedNodeId) return images;
 
@@ -226,7 +235,6 @@ function RouteComponent() {
     return getLayoutedElements(nodes, edges);
   }, [nodes, edges]);
 
-  /* ✅ FILTER */
   const handleFilterBranch = () => {
     const img = menu.node.data.img;
     setSelectedNodeId(img.id);
@@ -234,7 +242,6 @@ function RouteComponent() {
     setMenu(null);
   };
 
-  /* ✅ START FORK */
   const handleFork = () => {
     const img = menu.node.data.img;
     setForkSource(img);
@@ -242,7 +249,6 @@ function RouteComponent() {
     setMenu(null);
   };
 
-  /* ✅ MERGE (MOVE) */
   const handleForkMerge = (targetImg) => {
     if (!forkSource) return;
 
@@ -257,7 +263,6 @@ function RouteComponent() {
 
     updateProjectImages(updatedImages);
 
-    /* ✅ ADD THIS */
     setSelectedNodeId(targetImg.id);
     setLastGeneratedImage(targetImg.src);
 
@@ -265,19 +270,16 @@ function RouteComponent() {
     setIsForkMode(false);
   };
 
-  /* ✅ UNDO */
   const handleUndo = () => {
     if (!history.length) return;
 
     const prev = history[history.length - 1];
 
-    /* ✅ ✅ FIX: update ProjectStore instead */
     updateProjectImages(prev);
 
     setHistory((h) => h.slice(0, -1));
   };
 
-  /* ✅ NODE CLICK */
   const handleNodeClick = (event, node) => {
     const img = node.data.img;
 
@@ -360,7 +362,6 @@ function RouteComponent() {
 
   return (
     <div className="h-full w-full relative">
-      {/* ✅ UNDO */}
       <button
         onClick={handleUndo}
         style={{ position: "absolute", top: 10, right: 120, zIndex: 1000 }}
@@ -368,7 +369,6 @@ function RouteComponent() {
         Undo
       </button>
 
-      {/* ✅ SHOW FULL */}
       <button
         onClick={() => setSelectedNodeId(null)}
         style={{ position: "absolute", top: 10, left: 10, zIndex: 1000 }}
@@ -376,7 +376,6 @@ function RouteComponent() {
         Show Full Tree
       </button>
 
-      {/* ✅ FORK MODE */}
       {isForkMode && (
         <div
           style={{
@@ -393,7 +392,6 @@ function RouteComponent() {
         </div>
       )}
 
-      {/* ✅ REACT FLOW */}
       <ReactFlow
         key={images?.map((i) => i?.parentId).join("-")}
         nodes={layoutedNodes}
@@ -409,7 +407,6 @@ function RouteComponent() {
         <Controls />
       </ReactFlow>
 
-      {/* ✅ MENU */}
       {menu && (
         <div
           ref={menuRef}
@@ -434,7 +431,6 @@ function RouteComponent() {
         </div>
       )}
 
-      {/* ✅ COMPARE */}
       {compareList.length > 0 && (
         <div
           style={{
@@ -454,7 +450,6 @@ function RouteComponent() {
             zIndex: 1000,
           }}
         >
-          {/* ✅ IMAGE PREVIEW LIST */}
           <div style={{ display: "flex", gap: 12 }}>
             {compareList.map((img) => (
               <div
@@ -475,7 +470,6 @@ function RouteComponent() {
                   }}
                 />
 
-                {/* ✅ REMOVE BUTTON */}
                 <button
                   onClick={() => removeFromCompare(img.id)}
                   style={{
@@ -498,14 +492,12 @@ function RouteComponent() {
             ))}
           </div>
 
-          {/* ✅ TEXT MESSAGE */}
           {compareList.length === 1 && (
             <span style={{ fontSize: 12, color: "#d1d5db" }}>
               Select one more image
             </span>
           )}
 
-          {/* ✅ COMPARE BUTTON */}
           {compareList.length === 2 && (
             <button
               onClick={goToCompare}

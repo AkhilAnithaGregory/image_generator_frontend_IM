@@ -23,7 +23,6 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [lines, setLines] = useState<LineType[]>([]);
 
-  /* ✅ PROJECT IMAGES */
   const { projects, currentProjectId } = useProjectStore();
   const currentProject = projects.find((p) => p.id === currentProjectId);
   const images = currentProject?.images || [];

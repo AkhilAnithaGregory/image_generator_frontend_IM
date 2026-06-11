@@ -39,7 +39,7 @@ function RouteComponent() {
           <div className="border border-[#2c4e73] rounded-bl-xl p-10 w-full">
             <img
               className="w-3/4 flex justify-center mx-auto"
-              src={compareList[0]?.src}
+              src={compareList[0]?.src || ""}
               alt={compareList[0]?.id}
             />
           </div>
@@ -51,7 +51,7 @@ function RouteComponent() {
           <div className="border border-[#db7322] rounded-br-xl p-10 w-full">
             <img
               className="w-3/4 flex justify-center mx-auto"
-              src={compareList[1]?.src}
+              src={compareList[1]?.src || ""}
               alt={compareList[1]?.id}
             />
           </div>
