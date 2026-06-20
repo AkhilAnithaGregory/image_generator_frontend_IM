@@ -57,7 +57,7 @@ export const UiBeforeCompile = () => {
       setIsGenerating(true);
 
       const response = await fetch(
-        "http://localhost:3001/generate/generate",
+        "http://localhost:3001/api/generate",
         {
           method: "POST",
           body: formData,

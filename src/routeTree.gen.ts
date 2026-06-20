@@ -12,6 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as Version_treeIndexRouteImport } from './routes/version_tree/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as Public_repositoriesIndexRouteImport } from './routes/public_repositories/index'
+import { Route as ProjectIndexRouteImport } from './routes/project/index'
+import { Route as NotificationIndexRouteImport } from './routes/notification/index'
+import { Route as ProjectProjectIdRouteImport } from './routes/project/$projectId'
+import { Route as AuthSignupRouteImport } from './routes/auth/signup'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as Version_treeCompareIndexRouteImport } from './routes/version_tree/compare/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +35,37 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Public_repositoriesIndexRoute =
+  Public_repositoriesIndexRouteImport.update({
+    id: '/public_repositories/',
+    path: '/public_repositories/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProjectIndexRoute = ProjectIndexRouteImport.update({
+  id: '/project/',
+  path: '/project/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationIndexRoute = NotificationIndexRouteImport.update({
+  id: '/notification/',
+  path: '/notification/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectProjectIdRoute = ProjectProjectIdRouteImport.update({
+  id: '/project/$projectId',
+  path: '/project/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/auth/signup',
+  path: '/auth/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Version_treeCompareIndexRoute =
   Version_treeCompareIndexRouteImport.update({
     id: '/version_tree/compare/',
@@ -38,12 +75,24 @@ const Version_treeCompareIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/signup': typeof AuthSignupRoute
+  '/project/$projectId': typeof ProjectProjectIdRoute
+  '/notification/': typeof NotificationIndexRoute
+  '/project/': typeof ProjectIndexRoute
+  '/public_repositories/': typeof Public_repositoriesIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/version_tree/': typeof Version_treeIndexRoute
   '/version_tree/compare/': typeof Version_treeCompareIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/signup': typeof AuthSignupRoute
+  '/project/$projectId': typeof ProjectProjectIdRoute
+  '/notification': typeof NotificationIndexRoute
+  '/project': typeof ProjectIndexRoute
+  '/public_repositories': typeof Public_repositoriesIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/version_tree': typeof Version_treeIndexRoute
   '/version_tree/compare': typeof Version_treeCompareIndexRoute
@@ -51,18 +100,50 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/signup': typeof AuthSignupRoute
+  '/project/$projectId': typeof ProjectProjectIdRoute
+  '/notification/': typeof NotificationIndexRoute
+  '/project/': typeof ProjectIndexRoute
+  '/public_repositories/': typeof Public_repositoriesIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/version_tree/': typeof Version_treeIndexRoute
   '/version_tree/compare/': typeof Version_treeCompareIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/settings/' | '/version_tree/' | '/version_tree/compare/'
+  fullPaths:
+    | '/'
+    | '/auth/login'
+    | '/auth/signup'
+    | '/project/$projectId'
+    | '/notification/'
+    | '/project/'
+    | '/public_repositories/'
+    | '/settings/'
+    | '/version_tree/'
+    | '/version_tree/compare/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/settings' | '/version_tree' | '/version_tree/compare'
+  to:
+    | '/'
+    | '/auth/login'
+    | '/auth/signup'
+    | '/project/$projectId'
+    | '/notification'
+    | '/project'
+    | '/public_repositories'
+    | '/settings'
+    | '/version_tree'
+    | '/version_tree/compare'
   id:
     | '__root__'
     | '/'
+    | '/auth/login'
+    | '/auth/signup'
+    | '/project/$projectId'
+    | '/notification/'
+    | '/project/'
+    | '/public_repositories/'
     | '/settings/'
     | '/version_tree/'
     | '/version_tree/compare/'
@@ -70,6 +151,12 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthSignupRoute: typeof AuthSignupRoute
+  ProjectProjectIdRoute: typeof ProjectProjectIdRoute
+  NotificationIndexRoute: typeof NotificationIndexRoute
+  ProjectIndexRoute: typeof ProjectIndexRoute
+  Public_repositoriesIndexRoute: typeof Public_repositoriesIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   Version_treeIndexRoute: typeof Version_treeIndexRoute
   Version_treeCompareIndexRoute: typeof Version_treeCompareIndexRoute
@@ -98,6 +185,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/public_repositories/': {
+      id: '/public_repositories/'
+      path: '/public_repositories'
+      fullPath: '/public_repositories/'
+      preLoaderRoute: typeof Public_repositoriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/project/': {
+      id: '/project/'
+      path: '/project'
+      fullPath: '/project/'
+      preLoaderRoute: typeof ProjectIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notification/': {
+      id: '/notification/'
+      path: '/notification'
+      fullPath: '/notification/'
+      preLoaderRoute: typeof NotificationIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/project/$projectId': {
+      id: '/project/$projectId'
+      path: '/project/$projectId'
+      fullPath: '/project/$projectId'
+      preLoaderRoute: typeof ProjectProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/signup': {
+      id: '/auth/signup'
+      path: '/auth/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/version_tree/compare/': {
       id: '/version_tree/compare/'
       path: '/version_tree/compare'
@@ -110,6 +239,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthSignupRoute: AuthSignupRoute,
+  ProjectProjectIdRoute: ProjectProjectIdRoute,
+  NotificationIndexRoute: NotificationIndexRoute,
+  ProjectIndexRoute: ProjectIndexRoute,
+  Public_repositoriesIndexRoute: Public_repositoriesIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   Version_treeIndexRoute: Version_treeIndexRoute,
   Version_treeCompareIndexRoute: Version_treeCompareIndexRoute,

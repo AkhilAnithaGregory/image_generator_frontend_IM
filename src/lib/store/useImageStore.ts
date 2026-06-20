@@ -77,6 +77,12 @@ export const useImageStore = create<ImageStoreState>()(
           lastGeneratedImage: img,
         })),
 
+      resetImageSelection: () =>
+        set({
+          selectedNodeId: null,
+          lastGeneratedImage: null,
+        }),
+        
       revertCurrentImage: (currentImg: ImageItem | null) =>
         set((state) => {
           if (!currentImg) return state;

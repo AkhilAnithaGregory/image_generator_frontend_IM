@@ -348,16 +348,21 @@ function RouteComponent() {
 
   useEffect(() => {
     if (!currentProjectId) return;
-
     if (!images.length) {
-      setSelectedNodeId(null);
+      if (selectedNodeId !== null) setSelectedNodeId(null);
       return;
     }
 
     const last = images[images.length - 1];
 
-    setSelectedNodeId(last.id);
-    setLastGeneratedImage(last?.src);
+    if (last && selectedNodeId !== last.id) {
+      setSelectedNodeId(last.id);
+    }
+
+    if (last && last?.src && last?.src !== (typeof window !== 'undefined' && null)) {
+      // only update if different
+      setLastGeneratedImage((prev) => (prev !== last.src ? last.src : prev));
+    }
   }, [currentProjectId, images]);
 
   return (

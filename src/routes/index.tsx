@@ -3,12 +3,15 @@ import { useProjectStore } from "@/lib/store/useProjectStore";
 import { createFileRoute } from "@tanstack/react-router";
 import { UiBeforeCompile } from "@/components/content/home/uiBeforeCompile";
 import { UiAfterCompile } from "@/components/content/home/uiAfterCompile";
+import useInitAuth from "@/lib/context/useInitAuth";
+import DefaultLayout from "@/lib/layouts/defaultLayout";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
 function Index() {
+  useInitAuth();
   const { revertCurrentImage } = useImageStore();
 
   const { currentProjectId } = useProjectStore();
@@ -18,8 +21,8 @@ function Index() {
   }
 
   return (
-    <div className="w-full">
+    <DefaultLayout>
       <UiAfterCompile revertCurrentImage={revertCurrentImage} />
-    </div>
+    </DefaultLayout>
   );
 }

@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import DrawingCanvas from "@/components/ui/DrawingCanvas";
 import type { LineType } from "@/components/ui/DrawingCanvas";
-import { GeneratorSideBar } from "@/components/ui/generatorSidebar";
-import { HistorySideBar } from "@/components/ui/historySidebar";
+import { GeneratorSideBar } from "@/components/content/home/generatorSidebar";
+import { HistorySideBar } from "@/components/content/home/historySidebar";
 import LoadingText from "@/components/ui/loadingText";
 import { FiDownload, FiMaximize2 } from "react-icons/fi";
 import Konva from "konva";
@@ -22,6 +22,9 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
   const [tool, setTool] = useState<"pen" | "eraser">("pen");
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [lines, setLines] = useState<LineType[]>([]);
+
+  const [showCommitDialog, setShowCommitDialog] = useState(false);
+  const [pendingBranchId, setPendingBranchId] = useState<string | null>(null);
 
   const { projects, currentProjectId } = useProjectStore();
   const currentProject = projects.find((p) => p.id === currentProjectId);
@@ -52,32 +55,55 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
   };
 
   useEffect(() => {
-    if (!selectedNodeId && images.length > 0) {
-      const last = images[images.length - 1];
+    if (!images.length) return;
+
+    const last = images[images.length - 1];
+
+    // Only set when selection is explicitly null to avoid update loops
+    if (selectedNodeId === null && last?.id) {
       setSelectedNodeId(last.id);
     }
-  }, [images]);
+    // intentionally not updating when selectedNodeId is undefined/empty string
+  }, [images, selectedNodeId]);
 
   useEffect(() => {
     if (!imgRef.current) return;
 
     const rect = imgRef.current.getBoundingClientRect();
 
-    setImgSize({
-      width: rect.width,
-      height: rect.height,
+    // only update state when dimensions actually change
+    setImgSize((prev) => {
+      if (prev.width === rect.width && prev.height === rect.height) return prev;
+      return { width: rect.width, height: rect.height };
     });
   }, [lastGeneratedImage, images]);
 
+  const selectedImage = images.find((img) => img?.id === selectedNodeId);
+
+  const imageSrc =
+    lastGeneratedImage || selectedImage?.src || latestImage?.src || "/1.png";
+
+  const selectedBrush = speedDialOpen ? (
+    <IoClose />
+  ) : tool === "pen" ? (
+    <LuPencil />
+  ) : tool === "eraser" ? (
+    <LuEraser />
+  ) : (
+    <IoClose />
+  );
+
   return (
     <div className="flex gap-5 items-center w-full">
-      {/* ✅ LEFT GENERATOR */}
       <GeneratorSideBar
         onRevert={() => revertCurrentImage(latestImage)}
         getDrawingFile={getDrawingFile}
+        lines={lines}
         setLines={setLines}
         isGenerating={isGenerating}
         setIsGenerating={setIsGenerating}
+        showCommitDialog={showCommitDialog}
+        setShowCommitDialog={setShowCommitDialog}
       />
 
       {/* ✅ CENTER IMAGE */}
@@ -116,7 +142,7 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
           <div className="absolute top-3 right-3 flex gap-2">
             <button
               onClick={async () => {
-                const url = latestImage?.src || lastGeneratedImage || "/1.png";
+                const url = imageSrc;
                 const blob = await fetch(url).then((r) => r.blob());
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
@@ -129,9 +155,7 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
             </button>
 
             <button
-              onClick={() =>
-                window.open(latestImage?.src || lastGeneratedImage, "_blank")
-              }
+              onClick={() => window.open(imageSrc, "_blank")}
               className="bg-black text-white p-2 rounded"
             >
               <FiMaximize2 />
@@ -146,43 +170,53 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
                   onClick={() => {
                     setIsDrawingMode(true);
                     setTool("pen");
+                    setSpeedDialOpen(false);
                   }}
-                  className="bg-green-600 p-2 rounded-full"
+                  className="bg-green-600 p-2 rounded-full hover:cursor-pointer"
                 >
-                  <LuPencil />
+                  <LuPencil size={15} color="white" />
                 </button>
 
                 <button
                   onClick={() => {
                     setIsDrawingMode(true);
                     setTool("eraser");
+                    setSpeedDialOpen(false);
                   }}
-                  className="bg-orange-600 p-2 rounded-full"
+                  className="bg-orange-600 p-2 rounded-full hover:cursor-pointer"
                 >
-                  <LuEraser />
+                  <LuEraser size={15} color="white" />
                 </button>
 
                 <button
-                  onClick={() => setLines([])}
-                  className="bg-red-600 p-2 rounded-full"
+                  onClick={() => {
+                    setLines([]);
+                    setSpeedDialOpen(false);
+                  }}
+                  className="bg-red-600 p-2 rounded-full hover:cursor-pointer"
                 >
-                  <RiDeleteBinLine />
+                  <RiDeleteBinLine size={15} color="white" />
                 </button>
               </>
             )}
 
             <button
               onClick={() => setSpeedDialOpen((p) => !p)}
-              className="bg-black text-white p-3 rounded-full"
+              className="bg-white text-black p-3 rounded-full shadow-2xl"
             >
-              {speedDialOpen ? <IoClose /> : <LuPencil />}
+              {selectedBrush}
             </button>
           </div>
         </div>
       </div>
 
       {/* ✅ HISTORY */}
-      <HistorySideBar />
+      <HistorySideBar
+        onRequestPush={(branchId) => {
+          setPendingBranchId(branchId);
+          setShowCommitDialog(true);
+        }}
+      />
     </div>
   );
 };

@@ -1,16 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "./button";
+import { Button } from "../../ui/button";
 import { FaCodeFork } from "react-icons/fa6";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { GrRevert } from "react-icons/gr";
 
 import { useProjectStore } from "@/lib/store/useProjectStore";
 import { useImageStore } from "@/lib/store/useImageStore";
-import type { LineType } from "./DrawingCanvas";
+import type { LineType } from "../../ui/DrawingCanvas";
+import { BASE_URL } from "@/lib/defaultValues";
+import { CommitDialog } from "../commitDiaog";
+import { IoGitPullRequestSharp } from "react-icons/io5";
+import { PiGitBranchBold } from "react-icons/pi";
+import { useAuthStore } from "@/lib/store/authStore";
+import { useQuery } from "@tanstack/react-query";
+import * as api from "@/lib/api";
 
 interface GeneratorSideBarProps {
   onRevert: () => void;
   getDrawingFile?: () => Promise<File | null> | File | null;
+  lines: any;
   setLines: React.Dispatch<React.SetStateAction<LineType[]>>;
   isGenerating: boolean;
   setIsGenerating: (v: boolean) => void;
@@ -19,11 +27,13 @@ interface GeneratorSideBarProps {
 export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
   onRevert,
   getDrawingFile,
+  lines,
   setLines,
   isGenerating,
   setIsGenerating,
+  showCommitDialog,
+  setShowCommitDialog,
 }) => {
-
   const {
     projects,
     currentProjectId,
@@ -34,7 +44,29 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
     renameProject,
   } = useProjectStore();
 
+  const { user, token } = useAuthStore();
+  const isLoggedIn = !!token && !!user;
+
+  const [projectId, setProjectId] = useState("");
+  const [branchId, setBranchId] = useState("");
+  const [lastKnownVersion, setLastKnownVersion] = useState(1);
   const { selectedNodeId, setLastGeneratedImage } = useImageStore();
+
+  const { data: backendProjects = [] } = useQuery({
+    queryKey: ["projects"],
+    queryFn: api.getProjects,
+    enabled: isLoggedIn, // ✅ ONLY when logged in
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+  const projectsToShow = isLoggedIn ? backendProjects : projects;
+  const normalizedProjects = projectsToShow.map((p: any) => ({
+    id: p._id || p.id,
+    name: p.name,
+  }));
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
@@ -103,7 +135,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
     try {
       setIsGenerating(true);
 
-      const response = await fetch("http://localhost:3001/generate/generate", {
+      const response = await fetch(BASE_URL + "/generate", {
         method: "POST",
         body: formData,
       });
@@ -197,12 +229,50 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
 
         <select
           value={currentProjectId || ""}
-          onChange={(e) => setCurrentProject(e.target.value)}
+          onChange={async (e) => {
+            const nextProjectId = e.target.value;
+
+            // 1️⃣ Switch draft project
+            setCurrentProject(nextProjectId);
+
+            // 2️⃣ Reset live + image context
+            useProjectStore.getState().resetLiveContext();
+            useImageStore.getState().resetImageSelection();
+
+            // 3️⃣ IF backend project → hydrate it
+            if (isLoggedIn && nextProjectId) {
+              const project = backendProjects.find(
+                (p: any) => p._id === nextProjectId,
+              );
+
+              if (!project) return;
+
+              const branchId = project.liveBranch;
+
+              // ✅ pull backend state
+              const data = await api.pullLatest(branchId);
+
+              // ✅ hydrate draft images
+              useProjectStore.getState().updateProjectImages(data.state.images);
+
+              // ✅ set live context
+              useProjectStore
+                .getState()
+                .setBackendProject(project._id, branchId, data.version);
+
+              // ✅ select last image
+              const last = data.state.images.at(-1);
+              if (last?.id) {
+                useImageStore.getState().setSelectedNodeId(last.id);
+                useImageStore.getState().setLastGeneratedImage(last.src);
+              }
+            }
+          }}
           className="mb-3 w-full p-2 bg-gray-800"
         >
           <option value="">Select Project</option>
 
-          {projects.map((p) => (
+          {normalizedProjects.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>
@@ -281,7 +351,6 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
           </Button>
         </div>
         <div className="grid grid-cols-2 gap-2">
-
           <Button
             onClick={() => {
               createProject("New Project", null); // ✅ keep simple
@@ -301,16 +370,41 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
               deleteProject(currentProjectId);
 
               if (remaining.length > 0) {
-                setCurrentProject(remaining[0].id); 
+                setCurrentProject(remaining[0].id);
               } else {
-                setCurrentProject(null); 
+                setCurrentProject(null);
               }
             }}
           >
             🗑 Delete
           </Button>
         </div>
+
+        <Button
+          onClick={() => {
+            setShowCommitDialog(true);
+          }}
+        >
+          <IoCloudUploadOutline /> Push
+        </Button>
       </div>
+
+      <CommitDialog
+        open={showCommitDialog}
+        onClose={() => setShowCommitDialog(false)}
+        projectId={projectId}
+        branchId={branchId}
+        projectName={currentProject?.name || "New Project"}
+        state={{
+          images: currentProject?.images ?? [],
+          lines,
+        }}
+        lastKnownVersion={lastKnownVersion}
+        onSuccess={({ projectId, branchId }) => {
+          setProjectId(projectId);
+          setBranchId(branchId);
+        }}
+      />
     </div>
   );
 };
