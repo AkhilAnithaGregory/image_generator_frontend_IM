@@ -7,9 +7,11 @@ import {
   markAllRead,
   acceptInvite,
   rejectInvite,
+  getProjects,
 } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import { openBackendProject } from "@/lib/helper/openBackendProject";
 
 export const Route = createFileRoute("/notification/")({
   component: NotificationsPage,
@@ -24,7 +26,7 @@ function NotificationsPage() {
     queryFn: getNotifications,
   });
   /* ✅ MUTATIONS */
-console.log("notifications",notifications)
+  console.log("notifications", notifications);
   const markReadMutation = useMutation({
     mutationFn: (id: string) => markAsRead(id),
     onSuccess: () => {
@@ -40,9 +42,17 @@ console.log("notifications",notifications)
   });
 
   const acceptMutation = useMutation({
-    mutationFn: (id: string) => acceptInvite(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    mutationFn: (inviteId: string) => acceptInvite(inviteId),
+
+    onSuccess: async () => {
+      const projects = await getProjects();
+      const acceptedProject = projects.find(
+        (p) => p._id === notifications.project._id,
+      );
+
+      if (acceptedProject) {
+        await openBackendProject(acceptedProject);
+      }
     },
   });
 
@@ -117,9 +127,7 @@ console.log("notifications",notifications)
                     <Button
                       size="sm"
                       disabled={acceptMutation.isPending}
-                      onClick={() =>
-                        acceptMutation.mutate(n.data.inviteId)
-                      }
+                      onClick={() => acceptMutation.mutate(n.data.inviteId)}
                     >
                       Accept
                     </Button>
@@ -131,9 +139,7 @@ console.log("notifications",notifications)
                       size="sm"
                       variant="destructive"
                       disabled={rejectMutation.isPending}
-                      onClick={() =>
-                        rejectMutation.mutate(n.data.inviteId)
-                      }
+                      onClick={() => rejectMutation.mutate(n.data.inviteId)}
                     >
                       Reject
                     </Button>

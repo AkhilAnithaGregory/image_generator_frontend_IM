@@ -30,7 +30,7 @@ export const HistorySideBar = ({
     setLastKnownVersion,
     hasUnsavedChanges,
     setHasUnsavedChanges,
-    setProjectImages,
+    updateProjectImages,
   } = useProjectStore();
 
   const { user, token } = useAuthStore();

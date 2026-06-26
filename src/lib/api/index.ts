@@ -77,7 +77,7 @@ export const getProject = (projectId: string) =>
 
 export const getPublicProject = (search = "") => request(`/projects/public?search=${encodeURIComponent(search)}`);
 
-export const forkProject = (projectId: string) => request(`/projects/${projectId}/fork`, { method: "POST", });
+export const forkProject = (projectId: string) => request(`/projects/fork/${projectId}`, { method: "POST", });
 
 export const updateProject = (
     projectId: string,
@@ -187,14 +187,14 @@ export const removeCollaborator = (
     userId: string
 ) =>
     request(
-        `/projects/${projectId}/collaborators/${userId}`,
+        `/invite/remove_collaborator/${projectId}/id/${userId}`,
         {
             method: "DELETE",
         }
     );
 
 export const getCollaborators = (projectId: string) =>
-    request(`/projects/${projectId}/collaborators`);
+    request(`/invite/project_collaborators/${projectId}`);
 
 /* ✅ NOTIFICATIONS */
 export const getNotifications = () => request(`/notification`);
@@ -219,25 +219,25 @@ export const deleteAllNotifications = () =>
     });
 
 /* ✅ PULL REQUESTS */
+/* ✅ PULL REQUEST APIs */
 
 export const createPR = (data: {
     projectId: string;
     fromBranchId: string;
     toBranchId: string;
     title: string;
-}) => requestJSON("/pull-requests", "POST", data);
+}) =>
+    requestJSON("/pull_request", "POST", data);
+
+export const getPRs = (projectId: string) =>
+    request(`/pull_request/${projectId}/all`);
 
 export const acceptPR = (id: string) =>
-    request(`/pull-requests/${id}/accept`, {
+    request(`/pull_request/accept/${id}`, {
         method: "POST",
     });
 
 export const rejectPR = (id: string) =>
-    request(`/pull-requests/${id}/reject`, {
-        method: "POST",
-    });
-
-export const mergePR = (id: string) =>
-    request(`/pull-requests/${id}/merge`, {
+    request(`/pull_request/reject/${id}`, {
         method: "POST",
     });

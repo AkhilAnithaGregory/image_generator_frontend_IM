@@ -14,22 +14,21 @@ import { useProjectStore } from "@/lib/store/useProjectStore";
 export const CommitDialog = ({
   open,
   onClose,
-  branchId,
   projectName,
   state,
 }: {
   open: boolean;
   onClose: () => void;
-  branchId?: string;
   projectName: string;
   state: any;
 }) => {
   const [message, setMessage] = useState("");
+
   const {
     backendProjectId,
+    currentBranchId,
     lastKnownVersion,
     setBackendProject,
-    currentBranchId
   } = useProjectStore();
 
   const { mutateAsync, isPending, error } = useMutation({
@@ -37,18 +36,18 @@ export const CommitDialog = ({
       let finalProjectId: string;
       let finalBranchId: string;
 
+      // ✅ FIRST PUSH → CREATE PROJECT
       if (!backendProjectId) {
-        // ✅ FIRST PUSH ONLY
         const project = await api.createProject({
           name: projectName,
         });
 
         finalProjectId = project._id;
-        finalBranchId = project.liveBranch;
+        finalBranchId = project?.project?.liveBranch;
       } else {
         // ✅ EXISTING PROJECT
         if (!currentBranchId) {
-          throw new Error("Branch ID not found");
+          throw new Error("No active branch selected");
         }
 
         finalProjectId = backendProjectId;
@@ -64,16 +63,12 @@ export const CommitDialog = ({
       return {
         projectId: finalProjectId,
         branchId: finalBranchId,
-        version: commit.version, // ✅ expect backend to return this
+        version: commit?.version ?? (lastKnownVersion ?? 0) + 1,
       };
     },
 
     onSuccess: (data) => {
-      setBackendProject(
-        data.projectId,
-        data.branchId,
-        data.version
-      );
+      setBackendProject(data.projectId, data.branchId, data.version);
 
       setMessage("");
       onClose();
@@ -96,19 +91,26 @@ export const CommitDialog = ({
           placeholder="Enter commit message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          className="border px-3 py-2 rounded w-full"
         />
 
         {error && (
-          <p className="text-sm text-red-500">
-            {(error as Error).message}
-          </p>
+          <p className="text-sm text-red-500">{(error as Error).message}</p>
         )}
 
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={isPending}>
+
+          <Button
+            onClick={handleConfirm}
+            disabled={
+              isPending ||
+              !message.trim() ||
+              (backendProjectId && !currentBranchId)
+            }
+          >
             {isPending ? "Pushing..." : "Push"}
           </Button>
         </DialogFooter>

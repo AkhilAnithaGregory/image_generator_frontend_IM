@@ -8,7 +8,7 @@ import { useProjectStore } from "@/lib/store/useProjectStore";
 import { useImageStore } from "@/lib/store/useImageStore";
 import type { LineType } from "../../ui/DrawingCanvas";
 import { BASE_URL } from "@/lib/defaultValues";
-import { CommitDialog } from "../commitDiaog";
+import { CommitDialog } from "../commitDialog";
 import { IoGitPullRequestSharp } from "react-icons/io5";
 import { PiGitBranchBold } from "react-icons/pi";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -38,6 +38,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
     projects,
     currentProjectId,
     createProject,
+    backendProjectId,
     addImageToProject,
     deleteProject,
     setCurrentProject,
@@ -47,9 +48,6 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
   const { user, token } = useAuthStore();
   const isLoggedIn = !!token && !!user;
 
-  const [projectId, setProjectId] = useState("");
-  const [branchId, setBranchId] = useState("");
-  const [lastKnownVersion, setLastKnownVersion] = useState(1);
   const { selectedNodeId, setLastGeneratedImage } = useImageStore();
 
   const { data: backendProjects = [] } = useQuery({
@@ -222,50 +220,131 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
     setLastGeneratedImage(last?.src);
   }, [currentProjectId]);
 
+  const selectedBackendProjectId = backendProjectId || "";
+
+  useEffect(() => {
+    // ✅ LOGGED IN → backend projects
+    if (isLoggedIn && backendProjects.length === 1 && !backendProjectId) {
+      const onlyProject = backendProjects[0];
+
+      // simulate dropdown selection
+      const projectStore = useProjectStore.getState();
+      const imageStore = useImageStore.getState();
+
+      const draftProjectId = `backend-${onlyProject._id}`;
+
+      const exists = projectStore.projects.some((p) => p.id === draftProjectId);
+
+      if (!exists) {
+        projectStore.createDraftProjectWithId(
+          draftProjectId,
+          onlyProject.name,
+          [],
+        );
+      } else {
+        projectStore.setCurrentProject(draftProjectId);
+      }
+
+      api.pullLatest(onlyProject.liveBranch).then((data) => {
+        projectStore.updateProjectImages(data.state.images);
+        projectStore.setBackendProject(
+          onlyProject._id,
+          onlyProject.liveBranch,
+          data.version,
+        );
+
+        const last = data.state.images.at(-1);
+        if (last) {
+          imageStore.setSelectedNodeId(last.id);
+          imageStore.setLastGeneratedImage(last.src);
+        }
+      });
+    }
+
+    // ✅ LOGGED OUT → draft projects
+    if (!isLoggedIn && projects.length === 1 && !currentProjectId) {
+      setCurrentProject(projects[0].id);
+    }
+  }, [
+    isLoggedIn,
+    backendProjects,
+    projects,
+    backendProjectId,
+    currentProjectId,
+  ]);
+  const hasOnlyOneProject = isLoggedIn
+    ? backendProjects.length === 1
+    : projects.length === 1;
   return (
     <div className="h-screen min-w-75 w-75 flex flex-col justify-between bg-black text-white border-x border-gray-700 p-4 space-y-3">
       <div>
         <h3 className="text-xl mb-2">AI Image</h3>
 
         <select
-          value={currentProjectId || ""}
+          value={isLoggedIn ? selectedBackendProjectId : currentProjectId || ""}
+          //disabled={hasOnlyOneProject}
           onChange={async (e) => {
-            const nextProjectId = e.target.value;
+            const selectedId = e.target.value;
 
-            // 1️⃣ Switch draft project
-            setCurrentProject(nextProjectId);
+            const projectStore = useProjectStore.getState();
+            const imageStore = useImageStore.getState();
 
-            // 2️⃣ Reset live + image context
-            useProjectStore.getState().resetLiveContext();
-            useImageStore.getState().resetImageSelection();
+            // ✅ RESET CONTEXT
+            projectStore.resetLiveContext();
+            imageStore.resetImageSelection();
 
-            // 3️⃣ IF backend project → hydrate it
-            if (isLoggedIn && nextProjectId) {
-              const project = backendProjects.find(
-                (p: any) => p._id === nextProjectId,
+            // ======================
+            // 🔓 LOGGED OUT (DRAFT)
+            // ======================
+            if (!isLoggedIn) {
+              projectStore.setCurrentProject(selectedId);
+              return;
+            }
+
+            // ======================
+            // 🔐 LOGGED IN (BACKEND)
+            // ======================
+            const backendProject = backendProjects.find(
+              (p: any) => p._id === selectedId,
+            );
+            if (!backendProject) return;
+
+            // ✅ STABLE DRAFT ID (THIS FIXES EVERYTHING)
+            const draftProjectId = `backend-${backendProject._id}`;
+
+            // ✅ ENSURE DRAFT PROJECT EXISTS
+            const exists = projectStore.projects.some(
+              (p) => p.id === draftProjectId,
+            );
+
+            if (!exists) {
+              projectStore.createDraftProjectWithId(
+                draftProjectId,
+                backendProject.name,
+                [],
               );
+            } else {
+              projectStore.setCurrentProject(draftProjectId);
+            }
 
-              if (!project) return;
+            // ✅ PULL BACKEND STATE
+            const data = await api.pullLatest(backendProject.liveBranch);
 
-              const branchId = project.liveBranch;
+            // ✅ HYDRATE DRAFT IMAGES
+            projectStore.updateProjectImages(data.state.images);
 
-              // ✅ pull backend state
-              const data = await api.pullLatest(branchId);
+            // ✅ SET LIVE CONTEXT
+            projectStore.setBackendProject(
+              backendProject._id,
+              backendProject.liveBranch,
+              data.version,
+            );
 
-              // ✅ hydrate draft images
-              useProjectStore.getState().updateProjectImages(data.state.images);
-
-              // ✅ set live context
-              useProjectStore
-                .getState()
-                .setBackendProject(project._id, branchId, data.version);
-
-              // ✅ select last image
-              const last = data.state.images.at(-1);
-              if (last?.id) {
-                useImageStore.getState().setSelectedNodeId(last.id);
-                useImageStore.getState().setLastGeneratedImage(last.src);
-              }
+            // ✅ SELECT LAST IMAGE
+            const last = data.state.images.at(-1);
+            if (last) {
+              imageStore.setSelectedNodeId(last.id);
+              imageStore.setLastGeneratedImage(last.src);
             }
           }}
           className="mb-3 w-full p-2 bg-gray-800"
@@ -392,17 +471,10 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
       <CommitDialog
         open={showCommitDialog}
         onClose={() => setShowCommitDialog(false)}
-        projectId={projectId}
-        branchId={branchId}
         projectName={currentProject?.name || "New Project"}
         state={{
           images: currentProject?.images ?? [],
           lines,
-        }}
-        lastKnownVersion={lastKnownVersion}
-        onSuccess={({ projectId, branchId }) => {
-          setProjectId(projectId);
-          setBranchId(branchId);
         }}
       />
     </div>

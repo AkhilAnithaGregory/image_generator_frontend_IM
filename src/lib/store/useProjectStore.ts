@@ -99,6 +99,23 @@ export const useProjectStore = create<ProjectStoreState>()(
           hasUnsavedChanges: true,
         })),
 
+      createDraftProjectWithId: (
+        id: string,
+        name: string,
+        images: ImageItem[] = []
+      ) =>
+        set((state) => ({
+          projects: [
+            ...state.projects,
+            {
+              id,
+              name,
+              images,
+            },
+          ],
+          currentProjectId: id,
+        })),
+
       resetLiveContext: () =>
         set({
           backendProjectId: undefined,
