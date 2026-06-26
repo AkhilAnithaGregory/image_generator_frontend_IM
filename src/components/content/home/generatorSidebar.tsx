@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "../../ui/button";
-import { FaCodeFork } from "react-icons/fa6";
+import { Button } from "@/components/ui/button";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { GrRevert } from "react-icons/gr";
-
 import { useProjectStore } from "@/lib/store/useProjectStore";
 import { useImageStore } from "@/lib/store/useImageStore";
 import type { LineType } from "../../ui/DrawingCanvas";
 import { BASE_URL } from "@/lib/defaultValues";
 import { CommitDialog } from "../commitDialog";
-import { IoGitPullRequestSharp } from "react-icons/io5";
-import { PiGitBranchBold } from "react-icons/pi";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useQuery } from "@tanstack/react-query";
 import * as api from "@/lib/api";
-
 interface GeneratorSideBarProps {
   onRevert: () => void;
   getDrawingFile?: () => Promise<File | null> | File | null;
@@ -25,7 +20,6 @@ interface GeneratorSideBarProps {
 }
 
 export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
-  onRevert,
   getDrawingFile,
   lines,
   setLines,
@@ -40,7 +34,6 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
     createProject,
     backendProjectId,
     addImageToProject,
-    deleteProject,
     setCurrentProject,
     renameProject,
   } = useProjectStore();
@@ -53,7 +46,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
   const { data: backendProjects = [] } = useQuery({
     queryKey: ["projects"],
     queryFn: api.getProjects,
-    enabled: isLoggedIn, // ✅ ONLY when logged in
+    enabled: isLoggedIn, 
     staleTime: Infinity,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -218,12 +211,11 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
     const last = project.images[project.images.length - 1];
 
     setLastGeneratedImage(last?.src);
-  }, [currentProjectId]);
+  }, [currentProjectId, projects, setLastGeneratedImage]);
 
   const selectedBackendProjectId = backendProjectId || "";
 
   useEffect(() => {
-    // ✅ LOGGED IN → backend projects
     if (isLoggedIn && backendProjects.length === 1 && !backendProjectId) {
       const onlyProject = backendProjects[0];
 
@@ -261,20 +253,11 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
       });
     }
 
-    // ✅ LOGGED OUT → draft projects
     if (!isLoggedIn && projects.length === 1 && !currentProjectId) {
       setCurrentProject(projects[0].id);
     }
-  }, [
-    isLoggedIn,
-    backendProjects,
-    projects,
-    backendProjectId,
-    currentProjectId,
-  ]);
-  const hasOnlyOneProject = isLoggedIn
-    ? backendProjects.length === 1
-    : projects.length === 1;
+  }, [isLoggedIn, backendProjects, projects, backendProjectId, currentProjectId, setCurrentProject]);
+
   return (
     <div className="h-screen min-w-75 w-75 flex flex-col justify-between bg-black text-white border-x border-gray-700 p-4 space-y-3">
       <div>
@@ -289,21 +272,14 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             const projectStore = useProjectStore.getState();
             const imageStore = useImageStore.getState();
 
-            // ✅ RESET CONTEXT
             projectStore.resetLiveContext();
             imageStore.resetImageSelection();
 
-            // ======================
-            // 🔓 LOGGED OUT (DRAFT)
-            // ======================
             if (!isLoggedIn) {
               projectStore.setCurrentProject(selectedId);
               return;
             }
 
-            // ======================
-            // 🔐 LOGGED IN (BACKEND)
-            // ======================
             const backendProject = backendProjects.find(
               (p: any) => p._id === selectedId,
             );
@@ -326,21 +302,13 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             } else {
               projectStore.setCurrentProject(draftProjectId);
             }
-
-            // ✅ PULL BACKEND STATE
             const data = await api.pullLatest(backendProject.liveBranch);
-
-            // ✅ HYDRATE DRAFT IMAGES
             projectStore.updateProjectImages(data.state.images);
-
-            // ✅ SET LIVE CONTEXT
             projectStore.setBackendProject(
               backendProject._id,
               backendProject.liveBranch,
               data.version,
             );
-
-            // ✅ SELECT LAST IMAGE
             const last = data.state.images.at(-1);
             if (last) {
               imageStore.setSelectedNodeId(last.id);
@@ -421,18 +389,35 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
         </Button>
 
         <div className="grid grid-cols-2 gap-2">
-          <Button>
-            <FaCodeFork /> Fork
-          </Button>
+          <Button
+            onClick={async () => {
+              const projectStore = useProjectStore.getState();
+              const imageStore = useImageStore.getState();
 
-          <Button onClick={onRevert}>
+              const { currentBranchId, lastKnownVersion } = projectStore;
+              if (!currentBranchId || lastKnownVersion == null) return;
+
+              const latest = await api.pullLatest(currentBranchId);
+              projectStore.updateProjectImages(latest.state.images);
+              projectStore.setHasUnsavedChanges(true);
+              imageStore.resetImageSelection();
+              const last = latest.state.images.at(-1);
+              if (last) {
+                imageStore.setLastGeneratedImage(last.src);
+              }
+            }}
+          >
             <GrRevert /> Revert
           </Button>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <Button
             onClick={() => {
-              createProject("New Project", null); // ✅ keep simple
+              const projectStore = useProjectStore.getState();
+              const imageStore = useImageStore.getState();
+              projectStore.resetLiveContext();
+              projectStore.setCurrentProject(null);
+              imageStore.resetImageSelection();
             }}
           >
             ➕ New
@@ -440,19 +425,16 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
 
           <Button
             onClick={() => {
-              if (!currentProjectId) return;
-
-              const remaining = projects.filter(
-                (p) => p.id !== currentProjectId,
-              );
-
-              deleteProject(currentProjectId);
-
-              if (remaining.length > 0) {
-                setCurrentProject(remaining[0].id);
-              } else {
-                setCurrentProject(null);
+              if (!selectedNodeId) {
+                alert("Select an image to delete");
+                return;
               }
+              if (!currentProjectId || !selectedNodeId) return;
+              const projectStore = useProjectStore.getState();
+              const imageStore = useImageStore.getState();
+              projectStore.removeImageFromProject(selectedNodeId);
+              projectStore.setHasUnsavedChanges(true);
+              imageStore.resetImageSelection();
             }}
           >
             🗑 Delete

@@ -15,18 +15,13 @@ type Project = {
 };
 
 interface ProjectStoreState {
-  /* ---------------- Draft state ---------------- */
   projects: Project[];
   currentProjectId: string | null;
-
-  /* ---------------- Live backend state ---------------- */
   backendProjectId?: string;
   currentBranchId?: string;
   lastKnownVersion?: number;
-
   hasUnsavedChanges: boolean;
 
-  /* ---------------- Draft actions ---------------- */
   createProject: (prompt: string, firstImage: ImageItem | null) => void;
   updateProjectImages: (images: ImageItem[]) => void;
   renameProject: (projectId: string, newName: string) => void;
@@ -34,15 +29,10 @@ interface ProjectStoreState {
   deleteProject: (projectId: string) => void;
   setCurrentProject: (id: string | null) => void;
   resetProject: () => void;
-
-  /* ---------------- Live actions ---------------- */
-  setBackendProject: (
-    projectId: string,
-    branchId: string,
-    version: number
-  ) => void;
-
-  setCurrentBranchId: (branchId: string) => void; // ✅ MISSING BEFORE
+  removeImageFromProject: (imageId: string) => void;
+  createDraftProjectWithId: (id: string, name: string, images?: ImageItem[]) => void;
+  setBackendProject: (projectId: string, branchId: string, version: number) => void;
+  setCurrentBranchId: (branchId: string) => void;
   setLastKnownVersion: (v: number) => void;
   setHasUnsavedChanges: (v: boolean) => void;
 }
@@ -50,17 +40,13 @@ interface ProjectStoreState {
 export const useProjectStore = create<ProjectStoreState>()(
   persist(
     (set) => ({
-      /* ---------------- Initial state ---------------- */
       projects: [],
       currentProjectId: null,
-
       backendProjectId: undefined,
       currentBranchId: undefined,
       lastKnownVersion: undefined,
-
       hasUnsavedChanges: false,
 
-      /* ---------------- Draft actions ---------------- */
       createProject: (prompt, firstImage) =>
         set((state) => {
           const newProject: Project = {
@@ -97,6 +83,18 @@ export const useProjectStore = create<ProjectStoreState>()(
               : p
           ),
           hasUnsavedChanges: true,
+        })),
+
+      removeImageFromProject: (imageId) =>
+        set((state) => ({
+          projects: state.projects.map((p) =>
+            p.id === state.currentProjectId
+              ? {
+                ...p,
+                images: p.images.filter((img) => img.id !== imageId),
+              }
+              : p
+          ),
         })),
 
       createDraftProjectWithId: (
@@ -143,7 +141,6 @@ export const useProjectStore = create<ProjectStoreState>()(
           hasUnsavedChanges: false,
         }),
 
-      /* ---------------- Live actions ---------------- */
       setBackendProject: (projectId, branchId, version) =>
         set({
           backendProjectId: projectId,
