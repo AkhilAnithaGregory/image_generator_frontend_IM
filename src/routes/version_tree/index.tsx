@@ -15,6 +15,7 @@ import { useImageStore } from "@/lib/store/useImageStore";
 import { useCompareStore } from "@/lib/store/useCompareStore";
 import { useProjectStore } from "@/lib/store/useProjectStore";
 import ImageDialog from "@/components/content/imageDialog";
+import DefaultLayout from "@/lib/layouts/defaultLayout";
 
 export const Route = createFileRoute("/version_tree/")({
   component: RouteComponent,
@@ -104,51 +105,9 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]): Node[] => {
   });
 };
 
-const isCycle = (
-  images: ImageItem[],
-  sourceId: string,
-  targetId: string,
-): boolean => {
-  let current: string | null | undefined = targetId;
-
-  while (current) {
-    if (current === sourceId) return true;
-    current = images.find((i) => i.id === current)?.parentId;
-  }
-  return false;
-};
-
-const moveSubtree = (
-  images: ImageItem[],
-  sourceId: string,
-  newParentId: string,
-): ImageItem[] => {
-  const map = new Map(images.map((img) => [img.id, { ...img }]));
-
-  const update = (id: string) => {
-    const node = map.get(id);
-    if (!node) return;
-
-    if (id === sourceId) {
-      (node as ImageItem).parentId = newParentId;
-    }
-
-    images.forEach((child) => {
-      if (child.parentId === id) {
-        update(child.id);
-      }
-    });
-  };
-
-  update(sourceId);
-
-  return Array.from(map.values()) as ImageItem[];
-};
-
 const buildGraph = (
   images: ImageItem[],
   selectedNodeId: string | null,
-  forkSource: ImageItem | null,
 ): { nodes: Node[]; edges: Edge[] } => ({
   nodes: images.map((img) => ({
     id: img?.id,
@@ -156,13 +115,7 @@ const buildGraph = (
     position: { x: 0, y: 0 },
     data: { img },
     style: {
-      border:
-        img?.id === selectedNodeId
-          ? "2px solid blue"
-          : img?.id === forkSource?.id
-            ? "2px solid red"
-            : "1px solid #333",
-      transition: "all 0.3s ease",
+      border: img?.id === selectedNodeId ? "2px solid blue" : "1px solid #333",
     },
   })),
   edges: images
@@ -176,7 +129,7 @@ const buildGraph = (
 
 function RouteComponent() {
   const menuRef = useRef(null);
-  const { projects, currentProjectId, updateProjectImages } = useProjectStore();
+  const { projects, currentProjectId } = useProjectStore();
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
@@ -190,9 +143,6 @@ function RouteComponent() {
   const navigate = useNavigate();
 
   const [menu, setMenu] = useState(null);
-  const [forkSource, setForkSource] = useState(null);
-  const [isForkMode, setIsForkMode] = useState(false);
-  const [history, setHistory] = useState([]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -228,8 +178,8 @@ function RouteComponent() {
   }, [images, selectedNodeId]);
 
   const { nodes, edges } = useMemo(() => {
-    return buildGraph(filteredImages, selectedNodeId, forkSource);
-  }, [filteredImages, selectedNodeId, forkSource]);
+    return buildGraph(filteredImages, selectedNodeId);
+  }, [filteredImages, selectedNodeId]);
 
   const layoutedNodes = useMemo(() => {
     return getLayoutedElements(nodes, edges);
@@ -242,52 +192,7 @@ function RouteComponent() {
     setMenu(null);
   };
 
-  const handleFork = () => {
-    const img = menu.node.data.img;
-    setForkSource(img);
-    setIsForkMode(true);
-    setMenu(null);
-  };
-
-  const handleForkMerge = (targetImg) => {
-    if (!forkSource) return;
-
-    if (isCycle(images, forkSource.id, targetImg.id)) {
-      alert("Invalid move (cycle)");
-      return;
-    }
-
-    setHistory((prev) => [...prev, JSON.parse(JSON.stringify(images))]);
-
-    const updatedImages = moveSubtree(images, forkSource.id, targetImg.id);
-
-    updateProjectImages(updatedImages);
-
-    setSelectedNodeId(targetImg.id);
-    setLastGeneratedImage(targetImg.src);
-
-    setForkSource(null);
-    setIsForkMode(false);
-  };
-
-  const handleUndo = () => {
-    if (!history.length) return;
-
-    const prev = history[history.length - 1];
-
-    updateProjectImages(prev);
-
-    setHistory((h) => h.slice(0, -1));
-  };
-
   const handleNodeClick = (event, node) => {
-    const img = node.data.img;
-
-    if (isForkMode) {
-      handleForkMerge(img);
-      return;
-    }
-
     setMenu({
       x: event.clientX,
       y: event.clientY,
@@ -359,183 +264,164 @@ function RouteComponent() {
       setSelectedNodeId(last.id);
     }
 
-    if (last && last?.src && last?.src !== (typeof window !== 'undefined' && null)) {
-      // only update if different
+    if (
+      last &&
+      last?.src &&
+      last?.src !== (typeof window !== "undefined" && null)
+    ) {
       setLastGeneratedImage((prev) => (prev !== last.src ? last.src : prev));
     }
   }, [currentProjectId, images]);
 
   return (
-    <div className="h-full w-full relative">
-      <button
-        onClick={handleUndo}
-        style={{ position: "absolute", top: 10, right: 120, zIndex: 1000 }}
-      >
-        Undo
-      </button>
+    <DefaultLayout>
+      <div className="h-full w-full relative">
+        <button
+          onClick={() => setSelectedNodeId(null)}
+          style={{ position: "absolute", top: 10, left: 10, zIndex: 1000 }}
+        >
+          Show Full Tree
+        </button>
 
-      <button
-        onClick={() => setSelectedNodeId(null)}
-        style={{ position: "absolute", top: 10, left: 10, zIndex: 1000 }}
-      >
-        Show Full Tree
-      </button>
-
-      {isForkMode && (
-        <div
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            background: "red",
-            color: "white",
-            padding: 6,
-            zIndex: 1000,
+        <ReactFlow
+          key={images?.map((i) => i?.parentId).join("-")}
+          nodes={layoutedNodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          fitView
+          onNodeClick={handleNodeClick}
+          defaultEdgeOptions={{
+            style: { stroke: "#555", strokeWidth: 2 },
           }}
         >
-          Select target node
-        </div>
-      )}
+          <Background />
+          <Controls />
+        </ReactFlow>
 
-      <ReactFlow
-        key={images?.map((i) => i?.parentId).join("-")}
-        nodes={layoutedNodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        fitView
-        onNodeClick={handleNodeClick}
-        defaultEdgeOptions={{
-          style: { stroke: "#555", strokeWidth: 2 },
-        }}
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
+        {menu && (
+          <div
+            ref={menuRef}
+            style={{
+              position: "fixed",
+              top: menu.y,
+              left: menu.x,
+              background: "#ffffff",
+              borderRadius: 10,
+              boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+              padding: "6px 0",
+              zIndex: 2000,
+              minWidth: 160,
+              border: "1px solid #eee",
+              animation: "fadeIn 0.15s ease",
+            }}
+          >
+            <MenuItem onClick={handleView} label="👁 View" />
+            <MenuItem onClick={handleFilterBranch} label="🌿 Filter Branch" />
+            <MenuItem onClick={handleCompare} label="⚖ Compare" />
+          </div>
+        )}
 
-      {menu && (
-        <div
-          ref={menuRef}
-          style={{
-            position: "fixed",
-            top: menu.y,
-            left: menu.x,
-            background: "#ffffff",
-            borderRadius: 10,
-            boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
-            padding: "6px 0",
-            zIndex: 2000,
-            minWidth: 160,
-            border: "1px solid #eee",
-            animation: "fadeIn 0.15s ease",
-          }}
-        >
-          <MenuItem onClick={handleView} label="👁 View" />
-          <MenuItem onClick={handleFilterBranch} label="🌿 Filter Branch" />
-          <MenuItem onClick={handleFork} label="🔀 Fork" />
-          <MenuItem onClick={handleCompare} label="⚖ Compare" />
-        </div>
-      )}
-
-      {compareList.length > 0 && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 20,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "rgba(31,41,55,0.95)",
-            backdropFilter: "blur(8px)",
-            borderRadius: 12,
-            padding: "12px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 16,
-            boxShadow: "0 8px 20px rgba(0,0,0,0.3)",
-            border: "1px solid #374151",
-            zIndex: 1000,
-          }}
-        >
-          <div style={{ display: "flex", gap: 12 }}>
-            {compareList.map((img) => (
-              <div
-                key={img.id}
-                style={{
-                  position: "relative",
-                  borderRadius: 8,
-                  overflow: "hidden",
-                  border: "2px solid #4b5563",
-                }}
-              >
-                <img
-                  src={img.src}
+        {compareList.length > 0 && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: 20,
+              left: "50%",
+              transform: "translateX(-50%)",
+              background: "rgba(31,41,55,0.95)",
+              backdropFilter: "blur(8px)",
+              borderRadius: 12,
+              padding: "12px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              boxShadow: "0 8px 20px rgba(0,0,0,0.3)",
+              border: "1px solid #374151",
+              zIndex: 1000,
+            }}
+          >
+            <div style={{ display: "flex", gap: 12 }}>
+              {compareList.map((img) => (
+                <div
+                  key={img.id}
                   style={{
-                    width: 70,
-                    height: 70,
-                    objectFit: "cover",
-                  }}
-                />
-
-                <button
-                  onClick={() => removeFromCompare(img.id)}
-                  style={{
-                    position: "absolute",
-                    top: 4,
-                    right: 4,
-                    background: "rgba(0,0,0,0.6)",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "50%",
-                    width: 18,
-                    height: 18,
-                    fontSize: 10,
-                    cursor: "pointer",
+                    position: "relative",
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    border: "2px solid #4b5563",
                   }}
                 >
-                  ✕
-                </button>
-              </div>
-            ))}
+                  <img
+                    src={img.src}
+                    style={{
+                      width: 70,
+                      height: 70,
+                      objectFit: "cover",
+                    }}
+                  />
+
+                  <button
+                    onClick={() => removeFromCompare(img.id)}
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      background: "rgba(0,0,0,0.6)",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "50%",
+                      width: 18,
+                      height: 18,
+                      fontSize: 10,
+                      cursor: "pointer",
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {compareList.length === 1 && (
+              <span style={{ fontSize: 12, color: "#d1d5db" }}>
+                Select one more image
+              </span>
+            )}
+
+            {compareList.length === 2 && (
+              <button
+                onClick={goToCompare}
+                style={{
+                  marginLeft: 8,
+                  background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+                  color: "white",
+                  padding: "8px 16px",
+                  borderRadius: 8,
+                  border: "none",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 10px rgba(59,130,246,0.4)",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "scale(1.05)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+              >
+                Compare →
+              </button>
+            )}
           </div>
+        )}
 
-          {compareList.length === 1 && (
-            <span style={{ fontSize: 12, color: "#d1d5db" }}>
-              Select one more image
-            </span>
-          )}
-
-          {compareList.length === 2 && (
-            <button
-              onClick={goToCompare}
-              style={{
-                marginLeft: 8,
-                background: "linear-gradient(135deg, #3b82f6, #6366f1)",
-                color: "white",
-                padding: "8px 16px",
-                borderRadius: 8,
-                border: "none",
-                fontWeight: 600,
-                cursor: "pointer",
-                boxShadow: "0 4px 10px rgba(59,130,246,0.4)",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-              }}
-            >
-              Compare →
-            </button>
-          )}
-        </div>
-      )}
-
-      <ImageDialog
-        open={dialogOpen}
-        setOpen={setDialogOpen}
-        selectedImage={selectedImage}
-      />
-    </div>
+        <ImageDialog
+          open={dialogOpen}
+          setOpen={setDialogOpen}
+          selectedImage={selectedImage}
+        />
+      </div>
+    </DefaultLayout>
   );
 }
