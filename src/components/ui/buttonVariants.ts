@@ -12,13 +12,15 @@ export const buttonVariants = cva(
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
-          "bg-red-500 text-white hover:bg-red-400 w-50 py-6 text-xl cursor-pointer",
+          "bg-red-500 text-white hover:bg-red-400 w-20 py-6 text-xl cursor-pointer",
         link: "text-primary underline-offset-4 hover:underline",
         primary: "border border-[#82defc] py-6 text-xl cursor-pointer",
         secondary:
           "bg-blue-500 text-white hover:bg-blue-400 w-50 py-6 text-xl cursor-pointer",
         imgButton:
           "flex items-center justify-center bg-white text-black py-6 w-full",
+          back_button:
+          "bg-blue-500 text-white hover:bg-blue-400 w-fit py-3 text-sm cursor-pointer",
       },
       size: {
         default:

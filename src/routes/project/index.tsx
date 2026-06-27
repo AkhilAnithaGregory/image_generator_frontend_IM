@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import DefaultLayout from "@/lib/layouts/defaultLayout";
 import { useQuery } from "@tanstack/react-query";
 import { getProjects } from "@/lib/api";
-import { DeleteProjectButton } from "@/components/content/DeleteProjectButton";
+import { DeleteProjectButton } from "@/components/content/project/DeleteProjectButton";
+import * as Bread from "@/components/ui/breadcrumb";
 
 type Project = {
   _id: string;
@@ -55,6 +56,7 @@ export const columns: ColumnDef<Project>[] = [
       const date = new Date(row.getValue("updatedAt"));
       return (
         <span className="text-sm text-gray-400">
+          last updated on <br />
           {date.toLocaleDateString()}{" "}
           {date.toLocaleTimeString([], {
             hour: "2-digit",
@@ -110,7 +112,23 @@ function RouteComponent() {
 
   return (
     <DefaultLayout>
-      <div className="overflow-hidden  m-4">
+      <div className="px-4 pt-4">
+        <h2 className="text-start">Projects</h2>
+        <Bread.Breadcrumb>
+          <Bread.BreadcrumbList>
+            <Bread.BreadcrumbItem>
+              <Bread.BreadcrumbLink href="/">Home</Bread.BreadcrumbLink>
+            </Bread.BreadcrumbItem>
+            <Bread.BreadcrumbSeparator />
+            <Bread.BreadcrumbItem>
+              <Bread.BreadcrumbLink href="/project">
+                Project
+              </Bread.BreadcrumbLink>
+            </Bread.BreadcrumbItem>
+          </Bread.BreadcrumbList>
+        </Bread.Breadcrumb>
+      </div>
+      <div className="overflow-hidden m-4">
         <Table>
           <TableBody>
             {table.getRowModel().rows.length ? (

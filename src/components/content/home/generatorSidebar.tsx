@@ -9,6 +9,7 @@ import { BASE_URL } from "@/lib/defaultValues";
 import { CommitDialog } from "../commitDialog";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useQuery } from "@tanstack/react-query";
+import { Spinner } from "@/components/ui/spinner";
 import * as api from "@/lib/api";
 interface GeneratorSideBarProps {
   onRevert: () => void;
@@ -46,7 +47,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
   const { data: backendProjects = [] } = useQuery({
     queryKey: ["projects"],
     queryFn: api.getProjects,
-    enabled: isLoggedIn, 
+    enabled: isLoggedIn,
     staleTime: Infinity,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -256,7 +257,14 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
     if (!isLoggedIn && projects.length === 1 && !currentProjectId) {
       setCurrentProject(projects[0].id);
     }
-  }, [isLoggedIn, backendProjects, projects, backendProjectId, currentProjectId, setCurrentProject]);
+  }, [
+    isLoggedIn,
+    backendProjects,
+    projects,
+    backendProjectId,
+    currentProjectId,
+    setCurrentProject,
+  ]);
 
   return (
     <div className="h-screen min-w-75 w-75 flex flex-col justify-between bg-black text-white border-x border-gray-700 p-4 space-y-3">
@@ -385,7 +393,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
         </div>
 
         <Button onClick={handleSubmit} disabled={isGenerating}>
-          {isGenerating ? "Generating..." : "Generate"}
+          {isGenerating ? `${(<Spinner />)} "Generating..."` : "Generate"}
         </Button>
 
         <div className="grid grid-cols-2 gap-2">

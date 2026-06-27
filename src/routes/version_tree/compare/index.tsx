@@ -15,7 +15,7 @@ function RouteComponent() {
 
   useEffect(() => {
     if (!compareList || compareList.length === 0) {
-      navigate({ to: "/" });
+      navigate({ to: "/version_tree" });
     }
   }, [compareList, navigate]);
 
@@ -23,9 +23,9 @@ function RouteComponent() {
     return null;
   }
 
-  const handleRemove = () => {
+  const handleCompareAgain = () => {
     clearCompare();
-    navigate({ to: "/" });
+    navigate({ to: "/version_tree" });
   };
 
   return (
@@ -76,8 +76,9 @@ function RouteComponent() {
       </div>
 
       <div className="flex items-center justify-end my-5 gap-x-2">
-        <Button variant="secondary">Compare Again</Button>
-        <Button variant="destructive" onClick={handleRemove}>Remove</Button>
+        <Button variant="secondary" onClick={handleCompareAgain}>
+          Compare Again
+        </Button>
       </div>
     </section>
   );

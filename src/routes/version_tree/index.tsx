@@ -16,6 +16,7 @@ import { useCompareStore } from "@/lib/store/useCompareStore";
 import { useProjectStore } from "@/lib/store/useProjectStore";
 import ImageDialog from "@/components/content/imageDialog";
 import DefaultLayout from "@/lib/layouts/defaultLayout";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/version_tree/")({
   component: RouteComponent,
@@ -114,9 +115,6 @@ const buildGraph = (
     type: "custom",
     position: { x: 0, y: 0 },
     data: { img },
-    style: {
-      border: img?.id === selectedNodeId ? "2px solid blue" : "1px solid #333",
-    },
   })),
   edges: images
     .filter((img) => img?.parentId)
@@ -204,12 +202,7 @@ function RouteComponent() {
     return (
       <div
         onClick={onClick}
-        style={{
-          padding: "8px 14px",
-          fontSize: 14,
-          cursor: "pointer",
-          transition: "all 0.15s ease",
-        }}
+        className="px-2 py-3.5 text-lg cursor-pointer animate-all duration-300 text-start"
         onMouseEnter={(e) => {
           e.currentTarget.style.background = "#f3f4f6";
         }}
@@ -276,12 +269,13 @@ function RouteComponent() {
   return (
     <DefaultLayout>
       <div className="h-full w-full relative">
-        <button
+        <Button
+          variant="back_button"
           onClick={() => setSelectedNodeId(null)}
           style={{ position: "absolute", top: 10, left: 10, zIndex: 1000 }}
         >
           Show Full Tree
-        </button>
+        </Button>
 
         <ReactFlow
           key={images?.map((i) => i?.parentId).join("-")}
@@ -315,9 +309,9 @@ function RouteComponent() {
               animation: "fadeIn 0.15s ease",
             }}
           >
-            <MenuItem onClick={handleView} label="👁 View" />
-            <MenuItem onClick={handleFilterBranch} label="🌿 Filter Branch" />
-            <MenuItem onClick={handleCompare} label="⚖ Compare" />
+            <MenuItem onClick={handleView} label="View" />
+            <MenuItem onClick={handleFilterBranch} label="Filter Branch" />
+            <MenuItem onClick={handleCompare} label="Compare" />
           </div>
         )}
 

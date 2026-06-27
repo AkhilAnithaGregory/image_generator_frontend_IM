@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteProject } from "@/lib/api";
+import { ImBin } from "react-icons/im";
 
 export function DeleteProjectButton({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
@@ -29,7 +30,7 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
         size="sm"
         onClick={() => setOpen(true)}
       >
-        Delete
+        <ImBin />
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -64,4 +65,3 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
     </>
   );
 }
-``

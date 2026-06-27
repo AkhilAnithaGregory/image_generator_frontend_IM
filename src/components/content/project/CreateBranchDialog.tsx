@@ -45,20 +45,21 @@ export const CreateBranchDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create Branch</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="bg-white">
+        <span className="text-black text-xl">Create Branch</span>
 
         <input
+          id="branch_name"
           placeholder="New branch name"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          className="block w-full rounded-md border border-black bg-white/5 px-3 py-1.5 text-sm text-white placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-xl"
         />
 
-        <h3>Source</h3>
+        <span className="text-lg">Source</span>
         <select
-          className="mt-3 w-full p-2 bg-gray-800 rounded"
+          id="existing_branch_name"
+          className="w-full p-2 rounded border border-black"
           onChange={(e) => setFromBranchId(e.target.value || undefined)}
         >
           <option value="">Start empty</option>

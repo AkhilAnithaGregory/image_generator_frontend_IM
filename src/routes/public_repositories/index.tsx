@@ -1,17 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getPublicProject, forkProject } from "@/lib/api";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import DefaultLayout from "@/lib/layouts/defaultLayout";
+import * as Table from "@/components/ui/table";
+import * as Dialog from "@/components/ui/dialog";
+import { FaCodeFork } from "react-icons/fa6";
+import type { projectType } from "@/lib/types/projectTypes";
 
 export const Route = createFileRoute("/public_repositories/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState<projectType>(null);
   const [showDialog, setShowDialog] = useState(false);
 
   const { data: publicProjects = [] } = useQuery({
@@ -19,8 +22,7 @@ function RouteComponent() {
     queryFn: () => getPublicProject(""),
   });
 
-  const handleForkClick = (project) => {
-    console.log("project",project)
+  const handleForkClick = (project: projectType) => {
     setSelectedProject(project);
     setShowDialog(true);
   };
@@ -34,48 +36,81 @@ function RouteComponent() {
 
   return (
     <DefaultLayout>
-      <h1 className="text-2xl font-bold mb-4">Public Repositories</h1>
+      <div className="px-4 py-4">
+        <h2 className="text-start">Repositories</h2>
+      </div>
 
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="border-b border-gray-700">
-            <th className="p-2">Project Name</th>
-            <th className="p-2">Owner</th>
-            <th className="p-2">Actions</th>
-          </tr>
-        </thead>
+      <div className="p-2">
+        <Table.Table>
+          <Table.TableHeader className="bg-white text-black">
+            <Table.TableRow className="text-lg">
+              <Table.TableHead className="rounded-tl-lg text-center">
+                Sl.No
+              </Table.TableHead>
+              <Table.TableHead className="text-center">
+                Project Name
+              </Table.TableHead>
+              <Table.TableHead className="text-center">
+                Owner Name
+              </Table.TableHead>
+              <Table.TableHead className="text-center">
+                Created at
+              </Table.TableHead>
+              <Table.TableHead className="text-center rounded-tr-lg">
+                Action
+              </Table.TableHead>
+            </Table.TableRow>
+          </Table.TableHeader>
+          <Table.TableBody>
+            {publicProjects.map((p: projectType, index: number) => (
+              <Table.TableRow className="hover:bg-gray-900/50">
+                <Table.TableCell className="py-4 px-4">
+                  {index + 1}
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  {p.name}
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  {p.owner.username}
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  {new Date(p.createdAt).toLocaleDateString()}
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  <Button
+                    variant="secondary"
+                    onClick={() => handleForkClick(p)}
+                  >
+                    <FaCodeFork /> Fork
+                  </Button>
+                </Table.TableCell>
+              </Table.TableRow>
+            ))}
+          </Table.TableBody>
+        </Table.Table>
+      </div>
 
-        <tbody>
-          {publicProjects.map((p) => (
-            <tr key={p._id} className="border-b border-gray-800">
-              <td className="p-2">{p.name}</td>
-              <td className="p-2">{p.owner.username}</td>
-              <td className="p-2">
-                <Button onClick={() => handleForkClick(p)}>Fork</Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="bg-white">
-          <DialogHeader>
-            <DialogTitle>Fork this project?</DialogTitle>
-          </DialogHeader>
-
+      <Dialog.Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <Dialog.DialogContent className="bg-white">
+          <span className="text-black text-xl">Fork this project?</span>
           <p className="text-sm text-gray-600">
-            Are you sure you want to fork <strong>{selectedProject?.name}</strong>?
+            Are you sure you want to fork{" "}
+            <strong>{selectedProject?.name}</strong>?
           </p>
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowDialog(false)}>
+          <div className="flex items-center gap-x-2 justify-end">
+            <Button
+              variant="destructive"
+              className="w-20"
+              onClick={() => setShowDialog(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={confirmFork}>Yes, Fork</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <Button variant="secondary" className="w-30" onClick={confirmFork}>
+              Yes, Fork
+            </Button>
+          </div>
+        </Dialog.DialogContent>
+      </Dialog.Dialog>
     </DefaultLayout>
   );
 }

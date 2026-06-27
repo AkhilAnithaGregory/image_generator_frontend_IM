@@ -14,6 +14,7 @@ import { useProjectStore } from "@/lib/store/useProjectStore";
 import { useImageStore } from "@/lib/store/useImageStore";
 import { getBranches, pullLatest } from "@/lib/api";
 import { useAuthStore } from "@/lib/store/authStore";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export const HistorySideBar = ({
   onRequestPush,
@@ -131,28 +132,34 @@ export const HistorySideBar = ({
       <h3 className="text-xl font-semibold">Version History</h3>
 
       {/* ✅ History list */}
-      <ul>
-        {images.map((img) => (
-          <li key={img.id} className="mb-6">
-            <div
-              onClick={() => {
-                setSelectedNodeId(img.id);
-                setLastGeneratedImage(img.src);
-              }}
-              className={`p-2 rounded cursor-pointer ${
-                selectedNodeId === img.id ? "bg-gray-700" : "hover:bg-gray-800"
-              }`}
-            >
-              <img src={img.src} className="w-full h-40 object-cover rounded" />
+      <ScrollArea>
+        <ul>
+          {images.map((img) => (
+            <li key={img.id} className="mb-6">
+              <div
+                onClick={() => {
+                  setSelectedNodeId(img.id);
+                  setLastGeneratedImage(img.src);
+                }}
+                className={`p-2 rounded cursor-pointer ${
+                  selectedNodeId === img.id
+                    ? "bg-gray-700"
+                    : "hover:bg-gray-800"
+                }`}
+              >
+                <img
+                  src={img.src}
+                  className="w-full h-40 object-cover rounded"
+                />
 
-              <div className="text-xs text-gray-400 mt-2">{img.prompt}</div>
-            </div>
+                <div className="text-xs text-gray-400 mt-2">{img.prompt}</div>
+              </div>
 
-            <Separator />
-          </li>
-        ))}
-      </ul>
-
+              <Separator />
+            </li>
+          ))}
+        </ul>
+      </ScrollArea>
       {/* ✅ Unsaved indicator */}
       {hasUnsavedChanges && (
         <p className="text-xs text-yellow-400">● Unsaved changes</p>

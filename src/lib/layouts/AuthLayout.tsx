@@ -4,7 +4,7 @@ type Props = {
 
 const AuthLayout = ({ children }: Props) => {
   return (
-    <div className="h-screen flex bg-gray-100">
+    <div className="h-screen flex bg-black">
       <div className="flex-1 flex items-center justify-center p-6">
         {children}
       </div>
