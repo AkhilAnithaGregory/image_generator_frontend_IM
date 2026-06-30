@@ -1,11 +1,4 @@
-// components/branches/CreateBranchDialog.tsx
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { createBranch } from "@/lib/api";
@@ -53,7 +46,7 @@ export const CreateBranchDialog = ({
           placeholder="New branch name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="block w-full rounded-md border border-black bg-white/5 px-3 py-1.5 text-sm text-white placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-xl"
+          className="block w-full rounded-md border border-black bg-white/5 px-3 py-1.5 text-sm text-black placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-xl"
         />
 
         <span className="text-lg">Source</span>

@@ -106,10 +106,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]): Node[] => {
   });
 };
 
-const buildGraph = (
-  images: ImageItem[],
-  selectedNodeId: string | null,
-): { nodes: Node[]; edges: Edge[] } => ({
+const buildGraph = (images: ImageItem[]): { nodes: Node[]; edges: Edge[] } => ({
   nodes: images.map((img) => ({
     id: img?.id,
     type: "custom",

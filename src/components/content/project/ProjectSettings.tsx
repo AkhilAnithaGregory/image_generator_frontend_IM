@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { FaLock } from "react-icons/fa";
+import { ImBook } from "react-icons/im";
 import * as api from "@/lib/api";
 import * as Dialog from "@/components/ui/dialog";
+import * as Table from "@/components/ui/table";
 
 function ProjectSettings({ projectId }: { projectId: string }) {
   const queryClient = useQueryClient();
@@ -15,6 +18,7 @@ function ProjectSettings({ projectId }: { projectId: string }) {
     queryFn: () => api.getProject(projectId),
     enabled: !!projectId,
   });
+
   const { user } = useAuthStore();
   const [removeUserId, setRemoveUserId] = useState<string | null>(null);
 
@@ -23,7 +27,6 @@ function ProjectSettings({ projectId }: { projectId: string }) {
     queryFn: () => api.getCollaborators(projectId),
     enabled: !!projectId,
   });
-
   const removeMutation = useMutation({
     mutationFn: (collaboratorId: string) =>
       api.removeCollaborator(projectId, collaboratorId),
@@ -65,41 +68,49 @@ function ProjectSettings({ projectId }: { projectId: string }) {
   if (!project) return null;
 
   return (
-    <div className="max-w-xl space-y-8">
-      {/* ✅ VISIBILITY */}
-      <div>
-        <h4 className="text-lg font-semibold mb-2">Visibility</h4>
-        <Switch />
-        <div className="flex gap-6">
-          {["private", "public"].map((v) => (
-            <label key={v} className="flex items-center gap-2">
-              <input
-                type="radio"
-                checked={project?.project?.visibility === v}
-                onChange={() =>
-                  updateVisibility.mutate({
-                    projectId,
-                    visibility: v as "private" | "public",
-                  })
-                }
-              />
-              {v}
-            </label>
-          ))}
+    <div className="space-y-8 text-xl">
+      <p className="text-start pb-3 text-2xl text-white">
+        Collaborators and teams
+      </p>
+      <div className="flex items-center justify-between w-full">
+        {project?.project?.visibility === "public" ? (
+          <div className="flex gap-x-2">
+            <span className="border border-gray-400 rounded-md p-5 flex items-center justify-center">
+              <ImBook />
+            </span>
+            <div className="text-start">
+              <p className="text-bold text-white">Public repository</p>
+              <p>This repository is public and visible to anyone</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-x-2">
+            <span className="border border-gray-400 rounded-md p-5 flex items-center justify-center">
+              <FaLock />
+            </span>
+            <div className="text-start">
+              <p className="text-bold text-white">Private repository</p>
+              <p>Only those with access to this repository can view it</p>
+            </div>
+          </div>
+        )}
+        <div>
+          <h4 className="text-lg font-semibold mb-2">Manage Visibility</h4>
+          <Switch
+            checked={project?.project?.visibility === "public"}
+            className="w-50"
+            onCheckedChange={(checked) =>
+              updateVisibility.mutate({
+                projectId,
+                visibility: checked ? "public" : "private",
+              })
+            }
+          />
         </div>
       </div>
 
       <div>
-        <h4 className="text-lg font-semibold mb-2">Collaborators</h4>
-
-        <ul className="mb-4 space-y-1">
-          {project?.collaborators?.map((c) => (
-            <li key={c._id} className="text-sm text-gray-300">
-              {c.username} ({c.email})
-            </li>
-          ))}
-        </ul>
-
+        <h4 className="text-start pb-3 text-2xl text-white">Manage access</h4>
         <div className="flex gap-2">
           <input
             value={email}
@@ -109,36 +120,68 @@ function ProjectSettings({ projectId }: { projectId: string }) {
           />
           <Button
             type="button"
+            variant="create_new"
             onClick={() => addUser.mutate({ projectId, email })}
           >
-            Add
+            Add People
           </Button>
         </div>
       </div>
       <div>
-        <ul className="space-y-2">
-          {collaboratorsData?.collaborators.map((c) => (
-            <li
-              key={c.user._id}
-              className="flex justify-between items-center p-3 bg-gray-900 rounded"
-            >
-              <div>
-                <p className="text-sm font-medium">{c.user.username}</p>
-                <p className="text-xs text-gray-400">{c.user.email}</p>
-              </div>
-
-              {isOwner && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setRemoveUserId(c.user._id)}
-                >
-                  Remove
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
+        <Table.Table>
+          <Table.TableHeader className="bg-[#151B23]">
+            <Table.TableRow className="text-lg">
+              <Table.TableHead>Name</Table.TableHead>
+              <Table.TableHead className="text-center">Email</Table.TableHead>
+              <Table.TableHead className="text-center">Role</Table.TableHead>
+              <Table.TableHead className="text-center">Action</Table.TableHead>
+            </Table.TableRow>
+          </Table.TableHeader>
+          <Table.TableBody>
+            <Table.TableRow className="hover:bg-gray-900/50">
+              <Table.TableCell className="py-4 px-4">
+                <p className="text-lg font-medium text-start">
+                  {collaboratorsData?.owner?.username}
+                </p>
+              </Table.TableCell>
+              <Table.TableCell className="py-4 px-4">
+                <p className="text-lg text-gray-400">
+                  {collaboratorsData?.owner?.email}
+                </p>
+              </Table.TableCell>
+              <Table.TableCell className="py-4 px-4">
+                <p className="text-lg text-gray-400">Owner</p>
+              </Table.TableCell>
+              <Table.TableCell className="py-4 px-4"></Table.TableCell>
+            </Table.TableRow>
+            {collaboratorsData?.collaborators.map((c) => (
+              <Table.TableRow key={c.id} className="hover:bg-gray-900/50">
+                <Table.TableCell className="py-4 px-4">
+                  <p className="text-lg font-medium text-start">
+                    {c.user.username}
+                  </p>
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  <p className="text-lg text-gray-400">{c.user.email}</p>
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  <p className="text-lg text-gray-400">Collaborator</p>
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  {isOwner && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setRemoveUserId(c.user._id)}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </Table.TableCell>
+              </Table.TableRow>
+            ))}
+          </Table.TableBody>
+        </Table.Table>
 
         <Dialog.Dialog
           open={!!removeUserId}

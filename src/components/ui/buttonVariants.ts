@@ -14,13 +14,15 @@ export const buttonVariants = cva(
         destructive:
           "bg-red-500 text-white hover:bg-red-400 w-20 py-6 text-xl cursor-pointer",
         link: "text-primary underline-offset-4 hover:underline",
-        primary: "border border-[#82defc] py-6 text-xl cursor-pointer",
+        primary: "border border-[#82defc] py-4.5 text-xl cursor-pointer rounded-sm w-full",
         secondary:
           "bg-blue-500 text-white hover:bg-blue-400 w-50 py-6 text-xl cursor-pointer",
         imgButton:
           "flex items-center justify-center bg-white text-black py-6 w-full",
           back_button:
           "bg-blue-500 text-white hover:bg-blue-400 w-fit py-3 text-sm cursor-pointer",
+          generator: "py-4.5 text-xl cursor-pointer rounded-sm w-full ring-0 focus:ring-0 outline-none",
+          create_new: "bg-[#238636] hover:bg-[#32a448] text-white py-6 text-xl cursor-pointer"
       },
       size: {
         default:

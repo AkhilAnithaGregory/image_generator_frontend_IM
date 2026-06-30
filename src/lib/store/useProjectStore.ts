@@ -9,7 +9,7 @@ export type ImageItem = {
 };
 
 type Project = {
-  id: string; // draft ID
+  id: string; 
   name: string;
   images: ImageItem[];
 };

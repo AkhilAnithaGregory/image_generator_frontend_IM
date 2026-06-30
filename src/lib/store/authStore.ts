@@ -12,8 +12,6 @@ type AuthState = {
 
   setAuth: (user: User, token: string) => void;
   logout: () => void;
-
-  // ✅ helper for headers
   getAuthHeaders: () => Record<string, string>;
 };
 
@@ -24,7 +22,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setAuth: (user, token) => {
     set({ user, token });
 
-    // ✅ persist in localStorage
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
   },
@@ -38,7 +35,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   getAuthHeaders: () => {
     const token = get().token || localStorage.getItem("token");
-
     return token
       ? {
           Authorization: `Bearer ${token}`,

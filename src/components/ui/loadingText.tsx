@@ -46,7 +46,7 @@ export default function LoadingText({ isLoading }: { isLoading: boolean }) {
   if (!isLoading) return null;
 
   return (
-    <div className="text-black text-center text-xl">
+    <div className="text-black text-center text-5xl">
       {displayedText}
       <span className="animate-pulse">|</span>
     </div>

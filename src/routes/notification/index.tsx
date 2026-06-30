@@ -1,17 +1,11 @@
 import DefaultLayout from "@/lib/layouts/defaultLayout";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getNotifications,
-  markAsRead,
-  markAllRead,
-  acceptInvite,
-  rejectInvite,
-  getProjects,
-} from "@/lib/api";
+import * as api from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { openBackendProject } from "@/lib/helper/openBackendProject";
+import * as Bread from "@/components/ui/breadcrumb";
+import * as Table from "@/components/ui/table";
 
 export const Route = createFileRoute("/notification/")({
   component: NotificationsPage,
@@ -20,34 +14,32 @@ export const Route = createFileRoute("/notification/")({
 function NotificationsPage() {
   const queryClient = useQueryClient();
 
-  /* ✅ FETCH */
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["notifications"],
-    queryFn: getNotifications,
+    queryFn: api.getNotifications,
   });
-  /* ✅ MUTATIONS */
-  console.log("notifications", notifications);
+
   const markReadMutation = useMutation({
-    mutationFn: (id: string) => markAsRead(id),
+    mutationFn: (id: string) => api.markAsRead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const markAllMutation = useMutation({
-    mutationFn: markAllRead,
+    mutationFn: api.markAllRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const acceptMutation = useMutation({
-    mutationFn: (inviteId: string) => acceptInvite(inviteId),
+    mutationFn: (inviteId: string) => api.acceptInvite(inviteId),
 
     onSuccess: async () => {
-      const projects = await getProjects();
+      const projects = await api.getProjects();
       const acceptedProject = projects.find(
-        (p) => p._id === notifications.project._id,
+        (p: { _id: string }) => p._id === notifications.project._id,
       );
 
       if (acceptedProject) {
@@ -57,7 +49,7 @@ function NotificationsPage() {
   });
 
   const rejectMutation = useMutation({
-    mutationFn: (id: string) => rejectInvite(id),
+    mutationFn: (id: string) => api.rejectInvite(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
@@ -73,58 +65,70 @@ function NotificationsPage() {
 
   return (
     <DefaultLayout>
-      {/* ✅ HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-semibold">Notifications</h3>
-
+      <div className="px-4 pt-4">
+        <h2 className="text-start">Notifications</h2>
+        <Bread.Breadcrumb>
+          <Bread.BreadcrumbList>
+            <Bread.BreadcrumbItem>
+              <Bread.BreadcrumbLink href="/">Home</Bread.BreadcrumbLink>
+            </Bread.BreadcrumbItem>
+            <Bread.BreadcrumbSeparator />
+            <Bread.BreadcrumbItem>
+              <Bread.BreadcrumbLink href="/notification">
+                Notification
+              </Bread.BreadcrumbLink>
+            </Bread.BreadcrumbItem>
+          </Bread.BreadcrumbList>
+        </Bread.Breadcrumb>
+      </div>
+      <div className="w-full flex justify-end p-2">
         <Button
-          variant="outline"
+          variant="create_new"
           onClick={() => markAllMutation.mutate()}
           disabled={markAllMutation.isPending}
         >
           {markAllMutation.isPending ? "Updating..." : "Mark all as read"}
         </Button>
       </div>
-
-      {/* ✅ TABLE */}
-      <Table>
-        <TableBody>
+      <Table.Table>
+        <Table.TableHeader>
+          <Table.TableRow className="text-lg">
+            <Table.TableHead>Message</Table.TableHead>
+            <Table.TableHead className="text-center">Date&Time</Table.TableHead>
+            <Table.TableHead className="text-center">Status</Table.TableHead>
+            <Table.TableHead className="text-center">Action</Table.TableHead>
+          </Table.TableRow>
+        </Table.TableHeader>
+        <Table.TableBody>
           {notifications.length === 0 && (
-            <TableRow>
-              <TableCell className="text-center py-10 text-gray-400">
+            <Table.TableRow>
+              <Table.TableCell className="text-center py-10 text-gray-400">
                 No notifications
-              </TableCell>
-            </TableRow>
+              </Table.TableCell>
+            </Table.TableRow>
           )}
 
-          {notifications.map((n: any) => {
-            const isUnread = !n.isRead; // ✅ FIXED
+          {notifications.map((n) => {
+            const isUnread = !n.isRead;
 
             return (
-              <TableRow
+              <Table.TableRow
                 key={n._id}
-                className={`border-b ${
+                className={`border-b text-lg ${
                   isUnread ? "bg-blue-900/20 font-semibold" : "bg-transparent"
                 }`}
               >
-                {/* ✅ MESSAGE */}
-                <TableCell className="py-4 px-4">
-                  <div>
-                    <p>
-                      {n.sender?.username} invited you to {n.project?.name}
-                    </p>
-
-                    <p className="text-xs text-gray-400">
-                      {new Date(n.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                </TableCell>
-
-                {/* ✅ ACTIONS */}
-                <TableCell className="flex gap-2 py-4">
-                  {/* ✅ ACCEPT */}
+                <Table.TableCell className="py-4 px-4 text-start">
+                  {n.message}
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  {new Date(n.createdAt).toLocaleString()}
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">{n.type}</Table.TableCell>
+                <Table.TableCell className="flex gap-2 py-4 justify-end">
                   {n.type === "PROJECT_INVITE" && (
                     <Button
+                      variant="create_new"
                       size="sm"
                       disabled={acceptMutation.isPending}
                       onClick={() => acceptMutation.mutate(n.data.inviteId)}
@@ -133,7 +137,6 @@ function NotificationsPage() {
                     </Button>
                   )}
 
-                  {/* ✅ REJECT */}
                   {n.type === "PROJECT_INVITE" && (
                     <Button
                       size="sm"
@@ -145,23 +148,22 @@ function NotificationsPage() {
                     </Button>
                   )}
 
-                  {/* ✅ MARK AS READ */}
                   {!n.isRead && (
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
                       disabled={markReadMutation.isPending}
                       onClick={() => markReadMutation.mutate(n._id)}
                     >
                       Mark as read
                     </Button>
                   )}
-                </TableCell>
-              </TableRow>
+                </Table.TableCell>
+              </Table.TableRow>
             );
           })}
-        </TableBody>
-      </Table>
+        </Table.TableBody>
+      </Table.Table>
     </DefaultLayout>
   );
 }

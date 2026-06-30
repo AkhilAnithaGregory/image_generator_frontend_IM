@@ -1,10 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -36,16 +30,14 @@ export const CommitDialog = ({
       let finalProjectId: string;
       let finalBranchId: string;
 
-      // ✅ FIRST PUSH → CREATE PROJECT
       if (!backendProjectId) {
         const project = await api.createProject({
           name: projectName,
         });
-
+        console.log("projectAPI", project);
         finalProjectId = project._id;
-        finalBranchId = project?.project?.liveBranch;
+        finalBranchId = project?.liveBranch;
       } else {
-        // ✅ EXISTING PROJECT
         if (!currentBranchId) {
           throw new Error("No active branch selected");
         }
@@ -53,7 +45,6 @@ export const CommitDialog = ({
         finalProjectId = backendProjectId;
         finalBranchId = currentBranchId;
       }
-
       const commit = await api.createCommit(finalBranchId, {
         state,
         message,
@@ -83,10 +74,7 @@ export const CommitDialog = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="bg-white text-black">
-        <DialogHeader>
-          <DialogTitle>Commit changes</DialogTitle>
-        </DialogHeader>
-
+        <span className="text-lg"> Commit changes</span>
         <input
           placeholder="Enter commit message..."
           value={message}

@@ -45,6 +45,7 @@ export const CreatePullRequestDialog = ({
         </DialogHeader>
 
         <div className="space-y-3">
+          <span>Choose a head ref</span>
           <select
             value={fromBranch}
             onChange={(e) => setFromBranch(e.target.value)}
@@ -57,7 +58,7 @@ export const CreatePullRequestDialog = ({
               </option>
             ))}
           </select>
-
+          <span>Choose a base ref</span>
           <select
             value={toBranch}
             onChange={(e) => setToBranch(e.target.value)}
@@ -70,9 +71,9 @@ export const CreatePullRequestDialog = ({
               </option>
             ))}
           </select>
-
+          <span>Commit Message</span>
           <input
-            placeholder="Pull request title"
+            placeholder="Pull request message"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full p-2 border rounded"
@@ -80,10 +81,10 @@ export const CreatePullRequestDialog = ({
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="destructive" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleCreate}>Create PR</Button>
+          <Button variant="create_new" onClick={handleCreate}>Create pull request</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

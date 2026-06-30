@@ -18,14 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as Bread from "@/components/ui/breadcrumb";
 import { PullRequestsTab } from "@/components/content/project/PullRequests";
 import ProjectSettings from "@/components/content/project/ProjectSettings";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  TableHeader,
-  TableHead,
-} from "@/components/ui/table";
+import * as Table from "@/components/ui/table";
 
 type Branch = {
   _id: string;
@@ -47,6 +40,7 @@ function RouteComponent() {
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
+  const [openPR, setOpenPR] = useState(false);
 
   const { data: project } = useQuery({
     queryKey: ["project", projectId],
@@ -81,7 +75,7 @@ function RouteComponent() {
       id: "action",
       cell: ({ row }) => (
         <Button
-          variant="ghost"
+          variant="destructive"
           onClick={async () => {
             await api.deleteBranch(row.original._id);
             queryClient.invalidateQueries({
@@ -132,52 +126,70 @@ function RouteComponent() {
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
         <TabsContent value="branches">
+          <Button
+            variant="create_new"
+            className="flex ml-auto mb-4"
+            onClick={() => setOpen(true)}
+          >
+            New Branch
+          </Button>
           <Card>
             <CardContent className="text-sm text-muted-foreground">
-              <Button
-                variant="secondary"
-                className="flex ml-auto mb-4"
-                onClick={() => setOpen(true)}
-              >
-                New Branch
-              </Button>
-              <Table>
-                <TableHeader>
-                  <TableRow className="text-lg">
-                    <TableHead>Branch name</TableHead>
-                    <TableHead className="text-center">
+              <Table.Table>
+                <Table.TableHeader className="bg-[#151B23]">
+                  <Table.TableRow className="text-lg">
+                    <Table.TableHead>Branch name</Table.TableHead>
+                    <Table.TableHead className="text-center">
                       Last updated on
-                    </TableHead>
-                    <TableHead className="text-center">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+                    </Table.TableHead>
+                    <Table.TableHead className="text-center">
+                      Action
+                    </Table.TableHead>
+                  </Table.TableRow>
+                </Table.TableHeader>
+                <Table.TableBody>
                   {table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-gray-900/50">
+                    <Table.TableRow
+                      key={row.id}
+                      className="hover:bg-gray-900/50"
+                    >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="py-4 px-4">
+                        <Table.TableCell key={cell.id} className="py-4 px-4">
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext(),
                           )}
-                        </TableCell>
+                        </Table.TableCell>
                       ))}
-                    </TableRow>
+                    </Table.TableRow>
                   ))}
-                </TableBody>
-              </Table>
+                </Table.TableBody>
+              </Table.Table>
             </CardContent>
           </Card>
         </TabsContent>
         <TabsContent value="pullRequests">
+          <div className="flex justify-end">
+            <Button
+              variant="create_new"
+              className="flex ml-auto mb-4"
+              onClick={() => setOpenPR(true)}
+            >
+              Create Pull Request
+            </Button>
+          </div>
           <Card>
             <CardContent className="text-sm text-muted-foreground">
-              <PullRequestsTab projectId={projectId} />
+              <PullRequestsTab
+                open={openPR}
+                setOpen={setOpenPR}
+                projectId={projectId}
+              />
             </CardContent>
           </Card>
         </TabsContent>
         <TabsContent value="settings">
-          <Card>
+          <Card className="p-2">
             <CardContent className="text-sm text-muted-foreground">
               <ProjectSettings projectId={projectId} />
             </CardContent>

@@ -1,19 +1,27 @@
 import { useImageStore } from "@/lib/store/useImageStore";
 import { useProjectStore } from "@/lib/store/useProjectStore";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import * as api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { CreatePullRequestDialog } from "./PullRequestDialog";
+import { FaCodePullRequest } from "react-icons/fa6";
+import * as api from "@/lib/api";
+import * as Table from "@/components/ui/table";
 
-export const PullRequestsTab = ({ projectId }: { projectId: string }) => {
+export const PullRequestsTab = ({
+  projectId,
+  open,
+  setOpen,
+}: {
+  projectId: string;
+  open: boolean;
+  setOpen: (value: boolean) => void;
+}) => {
   const {
     updateProjectImages,
     setLastKnownVersion,
     setHasUnsavedChanges,
     setCurrentBranchId,
   } = useProjectStore();
-  const [open, setOpen] = useState(false);
   const { setLastGeneratedImage } = useImageStore();
 
   const { data: prs = [], refetch } = useQuery({
@@ -55,10 +63,6 @@ export const PullRequestsTab = ({ projectId }: { projectId: string }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={() => setOpen(true)}>Create Pull Request</Button>
-      </div>
-
       <CreatePullRequestDialog
         open={open}
         onClose={() => setOpen(false)}
@@ -66,36 +70,61 @@ export const PullRequestsTab = ({ projectId }: { projectId: string }) => {
         branches={branches}
       />
 
-      {prs.length === 0 && <p className="text-gray-400">No pull requests</p>}
-
-      {prs.map((pr: any) => (
-        <div
-          key={pr._id}
-          className="p-4 bg-gray-900 rounded border border-gray-700"
-        >
-          <p className="font-semibold">{pr.title}</p>
-          <p className="text-sm text-gray-400">
-            {pr.fromBranch.name} → {pr.toBranch.name}
-          </p>
-
-          <div className="flex gap-2 mt-3">
-            <Button
-              onClick={() => acceptMutation.mutate(pr._id)}
-              disabled={acceptMutation.isPending}
-            >
-              {acceptMutation.isPending ? "Merging..." : "Accept"}
-            </Button>
-
-            <Button
-              variant="destructive"
-              onClick={() => rejectMutation.mutate(pr._id)}
-              disabled={rejectMutation.isPending}
-            >
-              Reject
-            </Button>
-          </div>
+      {prs.length === 0 && (
+        <div className="text-white flex gap-y-2 items-center justify-center min-h-50 flex-col">
+          <FaCodePullRequest size={20} />
+          <p className="text-2xl">There aren’t any open pull requests.</p>
         </div>
-      ))}
+      )}
+
+      {prs.length != 0 && (
+        <Table.Table>
+          <Table.TableHeader className="bg-[#151B23]">
+            <Table.TableRow className="text-lg">
+              <Table.TableHead>Message</Table.TableHead>
+              <Table.TableHead className="text-center">
+                Created by
+              </Table.TableHead>
+              <Table.TableHead className="text-center">
+                Merging Branch
+              </Table.TableHead>
+              <Table.TableHead className="text-center">Action</Table.TableHead>
+            </Table.TableRow>
+          </Table.TableHeader>
+          <Table.TableBody>
+            {prs?.map((pr) => (
+              <Table.TableRow key={pr._id} className="hover:bg-gray-900/50">
+                <Table.TableCell className="py-4 px-4">
+                  {pr.title}
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  {pr.createdBy.username}
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  {pr.fromBranch.name} → {pr.toBranch.name || "main"}
+                </Table.TableCell>
+                <Table.TableCell className="py-4 px-4">
+                  <Button
+                    variant="create_new"
+                    onClick={() => acceptMutation.mutate(pr._id)}
+                    disabled={acceptMutation.isPending}
+                  >
+                    {acceptMutation.isPending ? "Merging..." : "Accept"}
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    onClick={() => rejectMutation.mutate(pr._id)}
+                    disabled={rejectMutation.isPending}
+                  >
+                    Reject
+                  </Button>
+                </Table.TableCell>
+              </Table.TableRow>
+            ))}
+          </Table.TableBody>
+        </Table.Table>
+      )}
     </div>
   );
 };

@@ -11,6 +11,7 @@ import { useAuthStore } from "@/lib/store/authStore";
 import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui/spinner";
 import * as api from "@/lib/api";
+import { RiImageCircleAiFill } from "react-icons/ri";
 interface GeneratorSideBarProps {
   onRevert: () => void;
   getDrawingFile?: () => Promise<File | null> | File | null;
@@ -220,7 +221,6 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
     if (isLoggedIn && backendProjects.length === 1 && !backendProjectId) {
       const onlyProject = backendProjects[0];
 
-      // simulate dropdown selection
       const projectStore = useProjectStore.getState();
       const imageStore = useImageStore.getState();
 
@@ -269,8 +269,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
   return (
     <div className="h-screen min-w-75 w-75 flex flex-col justify-between bg-black text-white border-x border-gray-700 p-4 space-y-3">
       <div>
-        <h3 className="text-xl mb-2">AI Image</h3>
-
+        <span className="flex justify-start py-2">Project</span>
         <select
           value={isLoggedIn ? selectedBackendProjectId : currentProjectId || ""}
           //disabled={hasOnlyOneProject}
@@ -333,9 +332,11 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             </option>
           ))}
         </select>
+        <span className="flex justify-start py-2">Prompt</span>
         <textarea
           rows={3}
           value={prompt}
+          placeholder="Enter Prompt"
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -343,9 +344,9 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
               handleSubmit();
             }
           }}
-          className="border rounded-md p-2 w-full bg-gray-900"
+          className="rounded-md p-2 w-full bg-gray-900 outline-none ring-0 focus:ring-0"
         />
-
+        <span className="flex justify-start py-2">Model</span>
         <select
           value={modelName}
           onChange={(e) => setModelName(e.target.value)}
@@ -353,7 +354,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
         >
           <option value="gemini-3.1-flash-image-preview">Gemini Flash</option>
         </select>
-
+        <span className="flex justify-start py-2">Setup</span>
         <select
           value={style}
           onChange={(e) => setStyle(e.target.value)}
@@ -362,7 +363,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
           <option value="portrait">Portrait</option>
           <option value="landscape">Landscape</option>
         </select>
-
+        <span className="flex justify-start py-2">Aspect Ratio</span>
         <select
           value={aspectRatio}
           onChange={(e) => setAspectRatio(e.target.value)}
@@ -392,32 +393,25 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
           />
         </div>
 
-        <Button onClick={handleSubmit} disabled={isGenerating}>
-          {isGenerating ? `${(<Spinner />)} "Generating..."` : "Generate"}
+        <Button
+          onClick={handleSubmit}
+          variant="generator"
+          disabled={isGenerating}
+          className="bg-blue-500 hover:bg-blue-600 text-white text-lg px-10 flex items-center gap-x-2"
+        >
+          {isGenerating ? (
+            <>
+              <Spinner />
+              Generating...
+            </>
+          ) : (
+            <>
+              <RiImageCircleAiFill />
+              Generate
+            </>
+          )}
         </Button>
 
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            onClick={async () => {
-              const projectStore = useProjectStore.getState();
-              const imageStore = useImageStore.getState();
-
-              const { currentBranchId, lastKnownVersion } = projectStore;
-              if (!currentBranchId || lastKnownVersion == null) return;
-
-              const latest = await api.pullLatest(currentBranchId);
-              projectStore.updateProjectImages(latest.state.images);
-              projectStore.setHasUnsavedChanges(true);
-              imageStore.resetImageSelection();
-              const last = latest.state.images.at(-1);
-              if (last) {
-                imageStore.setLastGeneratedImage(last.src);
-              }
-            }}
-          >
-            <GrRevert /> Revert
-          </Button>
-        </div>
         <div className="grid grid-cols-2 gap-2">
           <Button
             onClick={() => {
@@ -448,14 +442,35 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             🗑 Delete
           </Button>
         </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            onClick={async () => {
+              const projectStore = useProjectStore.getState();
+              const imageStore = useImageStore.getState();
 
-        <Button
-          onClick={() => {
-            setShowCommitDialog(true);
-          }}
-        >
-          <IoCloudUploadOutline /> Push
-        </Button>
+              const { currentBranchId, lastKnownVersion } = projectStore;
+              if (!currentBranchId || lastKnownVersion == null) return;
+
+              const latest = await api.pullLatest(currentBranchId);
+              projectStore.updateProjectImages(latest.state.images);
+              projectStore.setHasUnsavedChanges(true);
+              imageStore.resetImageSelection();
+              const last = latest.state.images.at(-1);
+              if (last) {
+                imageStore.setLastGeneratedImage(last.src);
+              }
+            }}
+          >
+            <GrRevert /> Revert
+          </Button>
+          <Button
+            onClick={() => {
+              setShowCommitDialog(true);
+            }}
+          >
+            <IoCloudUploadOutline /> Push
+          </Button>
+        </div>
       </div>
 
       <CommitDialog

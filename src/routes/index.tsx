@@ -58,7 +58,7 @@ function Index() {
     if (!isLoggedIn && projects.length === 1 && !currentProjectId) {
       setCurrentProject(projects[0].id);
     }
-  }, [isLoggedIn, backendProjects, projects, currentProjectId]);
+  }, [isLoggedIn, backendProjects, projects, currentProjectId, createDraftProjectWithId, setCurrentProject, updateProjectImages, setBackendProject]);
 
   if (!currentProjectId) {
     return <UiBeforeCompile />;

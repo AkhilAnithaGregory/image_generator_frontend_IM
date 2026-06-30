@@ -102,7 +102,7 @@ export const useImageStore = create<ImageStoreState>()(
       reset: () =>
         set({
           images: [],
-          nodes: [], // reset them too
+          nodes: [],
           edges: [],
           selectedNodeId: null,
           lastGeneratedImage: null,
@@ -113,7 +113,6 @@ export const useImageStore = create<ImageStoreState>()(
       partialize: (state) => ({
         selectedNodeId: state.selectedNodeId,
         lastGeneratedImage: state.lastGeneratedImage,
-        // nodes & edges are NOT persisted (good)
       }),
     }
   )

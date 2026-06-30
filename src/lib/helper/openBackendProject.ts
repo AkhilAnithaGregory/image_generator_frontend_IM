@@ -8,7 +8,6 @@ export const openBackendProject = async (backendProject: any) => {
 
   const draftProjectId = `backend-${backendProject._id}`;
 
-  // ✅ ensure draft exists
   const exists = projectStore.projects.some(
     (p) => p.id === draftProjectId
   );
@@ -23,7 +22,6 @@ export const openBackendProject = async (backendProject: any) => {
     projectStore.setCurrentProject(draftProjectId);
   }
 
-  // ✅ pull backend state
   const data = await api.pullLatest(
     backendProject.liveBranch
   );

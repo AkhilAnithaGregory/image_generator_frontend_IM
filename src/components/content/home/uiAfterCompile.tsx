@@ -110,7 +110,7 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
       <div className="w-full flex justify-center">
         <div className="relative group w-fit">
           {isGenerating && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-200/30 z-50">
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-200/80 z-50">
               <LoadingText isLoading={isGenerating} />
             </div>
           )}
