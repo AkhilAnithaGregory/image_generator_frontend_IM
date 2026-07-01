@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getPublicProject, forkProject } from "@/lib/api";
 import { useState } from "react";
@@ -8,12 +8,16 @@ import * as Table from "@/components/ui/table";
 import * as Dialog from "@/components/ui/dialog";
 import { FaCodeFork } from "react-icons/fa6";
 import type { projectType } from "@/lib/types/projectTypes";
+import { useAuthStore } from "@/lib/store/authStore";
 
 export const Route = createFileRoute("/public_repositories/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const navigate = useNavigate();
+  const { user, token } = useAuthStore();
+  const isLoggedIn = !!token && !!user;
   const [selectedProject, setSelectedProject] = useState<projectType>(null);
   const [showDialog, setShowDialog] = useState(false);
 
@@ -23,8 +27,13 @@ function RouteComponent() {
   });
 
   const handleForkClick = (project: projectType) => {
-    setSelectedProject(project);
-    setShowDialog(true);
+    if (!isLoggedIn) {
+      alert("You need to be logged in to fork a project.");
+      navigate({ to: "/auth/login" });
+    } else {
+      setSelectedProject(project);
+      setShowDialog(true);
+    }
   };
 
   const confirmFork = async () => {

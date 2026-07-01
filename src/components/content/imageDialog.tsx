@@ -16,6 +16,7 @@ interface ImageDialogProps {
 }
 
 function ImageDialog({ open, setOpen, selectedImage }: ImageDialogProps) {
+  console.log("selectedImage",selectedImage)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="min-w-lvh bg-white">

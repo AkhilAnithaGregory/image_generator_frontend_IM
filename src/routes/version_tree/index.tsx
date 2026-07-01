@@ -26,11 +26,27 @@ const nodeWidth = 160;
 const nodeHeight = 100;
 
 const CustomNode: React.FC<{ data: { img?: ImageItem } }> = ({ data }) => {
+  const getBorderColor = () => {
+    if (!data.img?.parentId) return "3px solid black";
+
+    const hasDrawing = !!data.img?.drawingImage;
+    const hasUpload = !!data.img?.uploadedImages?.length;
+    const hasPromptOnly = !hasDrawing && !hasUpload && !!data.img?.prompt;
+
+    if (hasDrawing && hasUpload) return "3px solid orange";
+    if (hasDrawing) return "3px solid red";
+    if (hasUpload) return "3px solid blue";
+    if (hasPromptOnly) return "3px solid green";
+
+    return "3px solid gray"; // fallback
+  };
+
   return (
     <div
       style={{
         width: 160,
         borderRadius: 12,
+        border: getBorderColor(),
         overflow: "hidden",
         background: "#fff",
         boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
@@ -266,6 +282,51 @@ function RouteComponent() {
   return (
     <DefaultLayout>
       <div className="h-full w-full relative">
+        <div
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            background: "white",
+            color: "black",
+            padding: "12px 16px",
+            borderRadius: 10,
+            fontSize: 13,
+            zIndex: 1000,
+            backdropFilter: "blur(6px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+          }}
+        >
+          <div style={{ fontWeight: 600, marginBottom: 6, textAlign: "start" }}>Legend</div>
+
+          {[
+            { color: "black", label: "Initial Image" },
+            { color: "green", label: "Prompt Only" },
+            { color: "red", label: "Drawing Mask" },
+            { color: "blue", label: "Uploaded Image" },
+            { color: "orange", label: "Drawing + Upload" },
+          ].map((item, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 4,
+              }}
+            >
+              <div
+                style={{
+                  width: 16,
+                  height: 16,
+                  border: `3px solid ${item.color}`,
+                  borderRadius: 4,
+                }}
+              />
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
         <Button
           variant="back_button"
           onClick={() => setSelectedNodeId(null)}

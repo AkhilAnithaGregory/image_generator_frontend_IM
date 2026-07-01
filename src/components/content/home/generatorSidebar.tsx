@@ -76,7 +76,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
   const [modelName, setModelName] = useState("gemini-3.1-flash-image-preview");
 
   const [style, setStyle] = useState(
-    "DSLR, 85mm lens, shallow depth of field, soft natural lighting",
+    "DSLR, 85mm lens, shallow depth of field, soft natural lighting, sharp focus on subject",
   );
 
   const [aspectRatio, setAspectRatio] = useState("1:1");
@@ -271,8 +271,8 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
       <div>
         <span className="flex justify-start py-2">Project</span>
         <select
+          id="project_name"
           value={isLoggedIn ? selectedBackendProjectId : currentProjectId || ""}
-          //disabled={hasOnlyOneProject}
           onChange={async (e) => {
             const selectedId = e.target.value;
 
@@ -292,10 +292,8 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             );
             if (!backendProject) return;
 
-            // ✅ STABLE DRAFT ID (THIS FIXES EVERYTHING)
             const draftProjectId = `backend-${backendProject._id}`;
 
-            // ✅ ENSURE DRAFT PROJECT EXISTS
             const exists = projectStore.projects.some(
               (p) => p.id === draftProjectId,
             );
@@ -322,7 +320,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
               imageStore.setLastGeneratedImage(last.src);
             }
           }}
-          className="mb-3 w-full p-2 bg-gray-800"
+          className="w-full p-2 bg-gray-800 rounded-md"
         >
           <option value="">Select Project</option>
 
@@ -334,40 +332,59 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
         </select>
         <span className="flex justify-start py-2">Prompt</span>
         <textarea
+          id="prompt"
           rows={3}
           value={prompt}
           placeholder="Enter Prompt"
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault(); 
               handleSubmit();
             }
           }}
-          className="rounded-md p-2 w-full bg-gray-900 outline-none ring-0 focus:ring-0"
+          className="rounded-md p-2 w-full bg-[#1e2938] outline-none ring-0 focus:ring-0"
         />
         <span className="flex justify-start py-2">Model</span>
         <select
+          id="model"
           value={modelName}
           onChange={(e) => setModelName(e.target.value)}
-          className="mt-3 w-full p-2 bg-gray-800"
+          className="w-full p-2 bg-gray-800 rounded-md"
         >
-          <option value="gemini-3.1-flash-image-preview">Gemini Flash</option>
+          <option value="gemini-3.1-flash-image-preview">
+            Gemini 3.1 Flash Image Preview
+          </option>
+          <option value="gemini-3-pro-image-preview">
+            Gemini 3 Pro Image Preview
+          </option>
         </select>
         <span className="flex justify-start py-2">Setup</span>
         <select
+          id="style"
           value={style}
           onChange={(e) => setStyle(e.target.value)}
-          className="mt-3 w-full p-2 bg-gray-800"
+          className="w-full p-2 bg-gray-800 rounded-md"
         >
-          <option value="portrait">Portrait</option>
-          <option value="landscape">Landscape</option>
+          <option value="DSLR, 85mm lens, shallow depth of field, soft natural lighting, sharp focus on subject">
+            Portrait
+          </option>
+          <option value="wide angle lens, 16mm, deep depth of field, natural lighting, highly detailed">
+            Landscape
+          </option>
+          <option value="cinematic lighting, anamorphic lens, film still, dramatic shadows, depth of field">
+            Cinematic
+          </option>
+          <option value="macro lens, studio lighting, ultra sharp, clean background, high detail">
+            Product / Close-up
+          </option>
         </select>
         <span className="flex justify-start py-2">Aspect Ratio</span>
         <select
+          id="aspect"
           value={aspectRatio}
           onChange={(e) => setAspectRatio(e.target.value)}
-          className="mt-3 w-full p-2 bg-gray-800"
+          className="w-full p-2 bg-gray-800 rounded-md"
         >
           <option value="1:1">1:1</option>
           <option value="16:9">16:9</option>
@@ -442,35 +459,37 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             🗑 Delete
           </Button>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            onClick={async () => {
-              const projectStore = useProjectStore.getState();
-              const imageStore = useImageStore.getState();
+        {isLoggedIn && (
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={async () => {
+                const projectStore = useProjectStore.getState();
+                const imageStore = useImageStore.getState();
 
-              const { currentBranchId, lastKnownVersion } = projectStore;
-              if (!currentBranchId || lastKnownVersion == null) return;
+                const { currentBranchId, lastKnownVersion } = projectStore;
+                if (!currentBranchId || lastKnownVersion == null) return;
 
-              const latest = await api.pullLatest(currentBranchId);
-              projectStore.updateProjectImages(latest.state.images);
-              projectStore.setHasUnsavedChanges(true);
-              imageStore.resetImageSelection();
-              const last = latest.state.images.at(-1);
-              if (last) {
-                imageStore.setLastGeneratedImage(last.src);
-              }
-            }}
-          >
-            <GrRevert /> Revert
-          </Button>
-          <Button
-            onClick={() => {
-              setShowCommitDialog(true);
-            }}
-          >
-            <IoCloudUploadOutline /> Push
-          </Button>
-        </div>
+                const latest = await api.pullLatest(currentBranchId);
+                projectStore.updateProjectImages(latest.state.images);
+                projectStore.setHasUnsavedChanges(true);
+                imageStore.resetImageSelection();
+                const last = latest.state.images.at(-1);
+                if (last) {
+                  imageStore.setLastGeneratedImage(last.src);
+                }
+              }}
+            >
+              <GrRevert /> Revert
+            </Button>
+            <Button
+              onClick={() => {
+                setShowCommitDialog(true);
+              }}
+            >
+              <IoCloudUploadOutline /> Push
+            </Button>
+          </div>
+        )}
       </div>
 
       <CommitDialog

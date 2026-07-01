@@ -11,6 +11,7 @@ import { IoClose } from "react-icons/io5";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { useProjectStore } from "@/lib/store/useProjectStore";
 import { useImageStore } from "@/lib/store/useImageStore";
+import { CiImageOff } from "react-icons/ci";
 
 export const UiAfterCompile = ({ revertCurrentImage }) => {
   const stageRef = useRef<Konva.Stage>(null);
@@ -32,7 +33,6 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
 
   const latestImage = images[images.length - 1];
 
-  /* ✅ KEEP IMAGE STORE (SELECTION ONLY) */
   const { selectedNodeId, setSelectedNodeId, lastGeneratedImage } =
     useImageStore();
 
@@ -44,7 +44,7 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
     const dataUrl = stage.toDataURL({
       width: stage.width(),
       height: stage.height(),
-      pixelRatio: 1, // ✅ IMPORTANT
+      pixelRatio: 1,
     });
 
     const blob = await fetch(dataUrl).then((r) => r.blob());
@@ -59,19 +59,16 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
 
     const last = images[images.length - 1];
 
-    // Only set when selection is explicitly null to avoid update loops
     if (selectedNodeId === null && last?.id) {
       setSelectedNodeId(last.id);
     }
-    // intentionally not updating when selectedNodeId is undefined/empty string
-  }, [images, selectedNodeId]);
+  }, [images, selectedNodeId, setSelectedNodeId]);
 
   useEffect(() => {
     if (!imgRef.current) return;
 
     const rect = imgRef.current.getBoundingClientRect();
 
-    // only update state when dimensions actually change
     setImgSize((prev) => {
       if (prev.width === rect.width && prev.height === rect.height) return prev;
       return { width: rect.width, height: rect.height };
@@ -92,7 +89,11 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
   ) : (
     <IoClose />
   );
-
+  const generatedImage =
+    lastGeneratedImage ||
+    images.find((img) => img?.id === selectedNodeId)?.src ||
+    latestImage?.src;
+  console.log("generatedImage", generatedImage);
   return (
     <div className="flex gap-5 items-center w-full">
       <GeneratorSideBar
@@ -106,28 +107,28 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
         setShowCommitDialog={setShowCommitDialog}
       />
 
-      {/* ✅ CENTER IMAGE */}
       <div className="w-full flex justify-center">
-        <div className="relative group w-fit">
+        <div className="relative min-w-lg min-h-lg group w-fit">
           {isGenerating && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-200/80 z-50">
               <LoadingText isLoading={isGenerating} />
             </div>
           )}
 
-          <img
-            ref={imgRef}
-            src={
-              lastGeneratedImage ||
-              images.find((img) => img?.id === selectedNodeId)?.src ||
-              latestImage?.src ||
-              "/1.png"
-            }
-            className="w-225 h-225 object-contain border"
-          />
+          {generatedImage && (
+            <img
+              ref={imgRef}
+              src={
+                lastGeneratedImage ||
+                images.find((img) => img?.id === selectedNodeId)?.src ||
+                latestImage?.src ||
+                ""
+              }
+              className="w-225 h-225 object-contain border"
+            />
+          )}
 
-          {/* ✅ DRAWING */}
-          {isDrawingMode && (
+          {isDrawingMode && generatedImage && (
             <DrawingCanvas
               stageRef={stageRef}
               width={imgSize.width}
@@ -138,33 +139,32 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
             />
           )}
 
-          {/* ✅ ACTION BUTTONS */}
-          <div className="absolute top-3 right-3 flex gap-2">
-            <button
-              onClick={async () => {
-                const url = imageSrc;
-                const blob = await fetch(url).then((r) => r.blob());
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = "image.png";
-                link.click();
-              }}
-              className="bg-black text-white p-2 rounded"
-            >
-              <FiDownload />
-            </button>
+          {generatedImage && (
+            <div className="absolute top-3 right-3 flex gap-2">
+              <button
+                onClick={async () => {
+                  const url = imageSrc;
+                  const blob = await fetch(url).then((r) => r.blob());
+                  const link = document.createElement("a");
+                  link.href = URL.createObjectURL(blob);
+                  link.download = "image.png";
+                  link.click();
+                }}
+                className="bg-black text-white p-2 rounded"
+              >
+                <FiDownload />
+              </button>
 
-            <button
-              onClick={() => window.open(imageSrc, "_blank")}
-              className="bg-black text-white p-2 rounded"
-            >
-              <FiMaximize2 />
-            </button>
-          </div>
-
-          {/* ✅ DRAW TOOL */}
+              <button
+                onClick={() => window.open(imageSrc, "_blank")}
+                className="bg-black text-white p-2 rounded"
+              >
+                <FiMaximize2 />
+              </button>
+            </div>
+          )}
           <div className="absolute bottom-4 left-4 flex flex-col gap-2">
-            {speedDialOpen && (
+            {speedDialOpen && generatedImage && (
               <>
                 <button
                   onClick={() => {
@@ -200,17 +200,24 @@ export const UiAfterCompile = ({ revertCurrentImage }) => {
               </>
             )}
 
-            <button
-              onClick={() => setSpeedDialOpen((p) => !p)}
-              className="bg-white text-black p-3 rounded-full shadow-2xl"
-            >
-              {selectedBrush}
-            </button>
+            {generatedImage && (
+              <button
+                onClick={() => setSpeedDialOpen((p) => !p)}
+                className="bg-white text-black p-3 rounded-full shadow-2xl"
+              >
+                {selectedBrush}
+              </button>
+            )}
           </div>
+          {!generatedImage && (
+            <div className="flex flex-col items-center">
+              <CiImageOff size={60} />
+              <span className="text-2xl text-white">No Image Generated</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ✅ HISTORY */}
       <HistorySideBar
         onRequestPush={(branchId) => {
           setPendingBranchId(branchId);

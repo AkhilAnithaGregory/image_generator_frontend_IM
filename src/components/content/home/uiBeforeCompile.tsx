@@ -14,7 +14,7 @@ export const UiBeforeCompile = () => {
 
   const [modelName, setModelName] = useState("gemini-3.1-flash-image-preview");
   const [style, setStyle] = useState(
-    "DSLR, 85mm lens, shallow depth of field, soft natural lighting",
+    "DSLR, 85mm lens, shallow depth of field, soft natural lighting, sharp focus on subject",
   );
   const [aspectRatio, setAspectRatio] = useState("1:1");
 
@@ -154,6 +154,12 @@ export const UiBeforeCompile = () => {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={4}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleGenerate();
+                }
+              }}
               className="w-3/4 text-lg resize-none bg-transparent outline-none text-white placeholder-gray-400"
               placeholder={`Generate or edit images with just a description.
             Example:
@@ -172,9 +178,11 @@ export const UiBeforeCompile = () => {
                 className="w-full p-2 bg-gray-800 rounded"
               >
                 <option value="gemini-3.1-flash-image-preview">
-                  Gemini 3.1 Flash
+                  Gemini 3.1 Flash Image Preview
                 </option>
-                <option value="gemini-3-pro-image-preview">Gemini 3 Pro</option>
+                <option value="gemini-3-pro-image-preview">
+                  Gemini 3 Pro Image Preview
+                </option>
               </select>
             </div>
 
@@ -187,11 +195,17 @@ export const UiBeforeCompile = () => {
                 onChange={(e) => setStyle(e.target.value)}
                 className="w-full p-2 bg-gray-800 rounded"
               >
-                <option value="DSLR, 85mm lens, shallow depth of field, soft natural lighting">
+                <option value="DSLR, 85mm lens, shallow depth of field, soft natural lighting, sharp focus on subject">
                   Portrait
                 </option>
-                <option value="wide angle, landscape, natural lighting">
+                <option value="wide angle lens, 16mm, deep depth of field, natural lighting, highly detailed">
                   Landscape
+                </option>
+                <option value="cinematic lighting, anamorphic lens, film still, dramatic shadows, depth of field">
+                  Cinematic
+                </option>
+                <option value="macro lens, studio lighting, ultra sharp, clean background, high detail">
+                  Product / Close-up
                 </option>
               </select>
             </div>
@@ -207,7 +221,6 @@ export const UiBeforeCompile = () => {
               >
                 <option value="1:1">1:1</option>
                 <option value="16:9">16:9</option>
-                <option value="9:16">9:16</option>
               </select>
             </div>
 

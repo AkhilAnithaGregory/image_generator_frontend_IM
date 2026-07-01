@@ -102,7 +102,7 @@ function NotificationsPage() {
         <Table.TableBody>
           {notifications.length === 0 && (
             <Table.TableRow>
-              <Table.TableCell className="text-center py-10 text-gray-400">
+              <Table.TableCell colSpan={4} className="text-center py-10 text-gray-400">
                 No notifications
               </Table.TableCell>
             </Table.TableRow>

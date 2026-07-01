@@ -115,6 +115,9 @@ export const HistorySideBar = ({
     <div className="h-screen overflow-auto w-xl bg-black p-4 text-white space-y-4">
       {/* ✅ Branch dropdown ONLY in live mode */}
       {isLiveProject && (
+        <h3 className="text-xl font-semibold text-start">Current Branch</h3>
+      )}
+      {isLiveProject && (
         <select
           key={currentBranchId}
           value={currentBranchId}
@@ -129,7 +132,7 @@ export const HistorySideBar = ({
         </select>
       )}
 
-      <h3 className="text-xl font-semibold">Version History</h3>
+      <h3 className="text-xl font-semibold text-start">Version History</h3>
 
       {/* ✅ History list */}
       <ScrollArea>
@@ -161,7 +164,7 @@ export const HistorySideBar = ({
         </ul>
       </ScrollArea>
       {/* ✅ Unsaved indicator */}
-      {hasUnsavedChanges && (
+      {hasUnsavedChanges && isLoggedIn && (
         <p className="text-xs text-yellow-400">● Unsaved changes</p>
       )}
 
