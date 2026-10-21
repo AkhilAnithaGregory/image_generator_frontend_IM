@@ -6,9 +6,11 @@ type Props = {
 
 const DefaultLayout = ({ children }: Props) => {
   return (
-    <div className="flex h-full">
+    <div className="flex flex-col md:flex-row h-[100dvh] w-full overflow-hidden bg-[#080b12]">
       <Sidebar />
-      <div className="pl-16 flex-1 h-full">{children}</div>
+      <div className="flex-1 h-full pb-14 md:pb-0 md:pl-14 overflow-hidden relative">
+        {children}
+      </div>
     </div>
   );
 };

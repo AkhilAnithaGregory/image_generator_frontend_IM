@@ -1,15 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { RiAiGenerate2, RiImageCircleAiFill } from "react-icons/ri";
 import { useState } from "react";
 import { useProjectStore } from "@/lib/store/useProjectStore";
 import DefaultLayout from "@/lib/layouts/defaultLayout";
-import { LuImagePlus } from "react-icons/lu";
-import { Spinner } from "@/components/ui/spinner";
+import { LuImagePlus, LuSparkles, LuWand } from "react-icons/lu";
+import { IoClose } from "react-icons/io5";
+import LoadingText from "@/components/ui/loadingText";
+import { BASE_URL } from "@/lib/defaultValues";
 
 export const UiBeforeCompile = () => {
   const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
   const [prompt, setPrompt] = useState("");
-  console.log("images", images);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const [modelName, setModelName] = useState("gemini-3.1-flash-image-preview");
@@ -33,7 +33,18 @@ export const UiBeforeCompile = () => {
         preview: URL.createObjectURL(file),
       }));
 
-    setImages(previews.slice(0, 4));
+    setImages((prev) => [...prev, ...previews].slice(0, 4));
+    event.target.value = "";
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => {
+      const target = prev[index];
+      if (target?.preview) {
+        URL.revokeObjectURL(target.preview);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleGenerate = async () => {
@@ -56,7 +67,7 @@ export const UiBeforeCompile = () => {
     try {
       setIsGenerating(true);
 
-      const response = await fetch("http://localhost:3001/api/generate", {
+      const response = await fetch(`${BASE_URL}/generate`, {
         method: "POST",
         body: formData,
       });
@@ -90,162 +101,188 @@ export const UiBeforeCompile = () => {
 
   return (
     <DefaultLayout>
-      <div className="h-screen w-full flex flex-col justify-center items-center text-white">
-        <span className="text-5xl font-bold">
-          NEXORA - Free AI Image Generator
-        </span>
+      {/* Full screen loading overlay when generating */}
+      {isGenerating && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <LoadingText isLoading={isGenerating} />
+        </div>
+      )}
 
-        <p className="text-xl py-5 text-gray-300">
-          Turn your ideas into images quickly using descriptions
+      <div
+        className="min-h-full w-full flex flex-col justify-center items-center text-white px-4 py-8 sm:py-14 overflow-y-auto"
+        style={{ background: "linear-gradient(180deg, #080b12 0%, #0c1018 50%, #080b12 100%)" }}
+      >
+        {/* Branding */}
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+            <LuSparkles size={18} className="text-blue-400" />
+          </div>
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-[0.18em]">
+            Nexora AI Studio
+          </span>
+        </div>
+
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight text-center leading-tight mb-2.5">
+          Turn Ideas Into Images
+        </h1>
+
+        <p className="text-sm sm:text-base text-gray-400 mb-6 sm:mb-8 text-center max-w-md px-2 leading-relaxed">
+          Generate, branch, and edit high-resolution visuals with AI.
         </p>
 
-        <div className="shadow-[0_20px_50px_rgba(8,112,184,0.7)] rounded-xl w-1/2 p-10 bg-[#0f172a]">
-          <div className="flex items-start gap-x-5 pb-4">
+        {/* Main Creation Card */}
+        <div
+          className="w-full max-w-2xl rounded-2xl p-4 sm:p-6 border border-white/[0.08] shadow-2xl backdrop-blur-xl"
+          style={{ background: "rgba(12, 15, 23, 0.85)" }}
+        >
+          {/* Prompt + Upload Area */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3 sm:gap-4 mb-4">
             {images?.length === 0 ? (
-              <div className="relative outline-dashed outline-[#334155] rounded-md w-40 h-40 bg-[#1f2937]">
+              <div className="relative border border-dashed border-white/[0.12] rounded-xl h-24 sm:h-28 sm:w-28 sm:min-w-[112px] bg-white/[0.02] hover:bg-white/[0.05] transition-colors flex items-center justify-center cursor-pointer">
                 <input
                   type="file"
                   multiple
+                  accept="image/*"
                   onChange={handleImageChange}
                   className="absolute inset-0 opacity-0 cursor-pointer"
                 />
-
-                <span className="absolute top-2 right-2 text-gray-400 text-sm">
+                <span className="absolute top-1.5 right-2 text-gray-500 text-[10px] font-mono">
                   {images?.length}/4
                 </span>
-
-                <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                  <LuImagePlus size={30} />
-                  <span>Image refs</span>
+                <div className="flex flex-row sm:flex-col items-center justify-center text-gray-400 gap-2 sm:gap-1.5">
+                  <LuImagePlus size={20} className="text-blue-400" />
+                  <span className="text-xs">Add Reference</span>
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 w-1/3 gap-2">
+              <div className="grid grid-cols-4 sm:grid-cols-2 gap-2 sm:min-w-[112px]">
                 {images.map((img, i) => (
-                  <img
-                    key={i}
-                    src={img.preview}
-                    className="w-20 h-20 rounded"
-                  />
+                  <div key={i} className="relative group w-full aspect-square sm:w-13 sm:h-13 rounded-lg overflow-hidden border border-white/[0.08] bg-black">
+                    <img
+                      src={img.preview}
+                      className="w-full h-full object-cover"
+                      alt={`Reference ${i + 1}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute top-0.5 right-0.5 bg-black/80 hover:bg-red-500 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center transition-colors cursor-pointer shadow-sm"
+                      title="Remove reference"
+                    >
+                      <IoClose size={11} />
+                    </button>
+                  </div>
                 ))}
                 {images.length < 4 && (
-                  <div className="relative outline-dashed outline-[#334155] h-25 w-25 rounded-md bg-[#1f2937]">
+                  <div className="relative border border-dashed border-white/[0.1] rounded-lg w-full aspect-square sm:w-13 sm:h-13 bg-white/[0.02] flex items-center justify-center">
                     <input
                       type="file"
                       multiple
+                      accept="image/*"
                       onChange={handleImageChange}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
-
-                    <span className="absolute top-2 right-2 text-gray-400 text-sm">
-                      {images?.length}/4
-                    </span>
-
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                      <LuImagePlus size={20} />
-                      <span>Image refs</span>
+                    <div className="flex flex-col items-center justify-center text-gray-500">
+                      <LuImagePlus size={14} />
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              rows={4}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleGenerate();
-                }
-              }}
-              className="w-3/4 text-lg resize-none bg-transparent outline-none text-white placeholder-gray-400"
-              placeholder={`Generate or edit images with just a description.
-            Example:
-            - A futuristic city at sunset
-            - Remove object from image`}
-            />
+            <div className="flex-1">
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                rows={3}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleGenerate();
+                  }
+                }}
+                placeholder="A high-tech cyberpunk explorer in a neon-lit rainstorm, intricate reflection, cinematic 8k..."
+                className="w-full p-3 sm:p-3.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white text-sm placeholder:text-gray-600 outline-none focus:border-white/[0.2] transition-colors resize-none leading-relaxed"
+              />
+            </div>
           </div>
-          <div className="grid grid-cols-4 gap-x-2 items-end">
-            <div className="mb-3 sm:mb-0">
-              <label className="text-sm text-gray-400 block mb-1 text-start">
-                AI Model
+
+          {/* Controls Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 items-end">
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 font-medium uppercase tracking-[0.05em]">
+                Model
               </label>
               <select
                 value={modelName}
                 onChange={(e) => setModelName(e.target.value)}
-                className="w-full p-2 bg-gray-800 rounded"
+                className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-xs outline-none focus:border-white/[0.15] transition-colors cursor-pointer"
               >
-                <option value="gemini-3.1-flash-image-preview">
-                  Gemini 3.1 Flash Image Preview
+                <option value="gemini-3.1-flash-image-preview" className="bg-[#0f1219]">
+                  Gemini 3.1 Flash
                 </option>
-                <option value="gemini-3-pro-image-preview">
-                  Gemini 3 Pro Image Preview
+                <option value="gemini-2.5-flash-image" className="bg-[#0f1219]">
+                  Gemini 2.5 Flash
                 </option>
               </select>
             </div>
 
-            <div className="mb-3 sm:mb-0">
-              <label className="text-sm text-gray-400 block mb-1 text-start">
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 font-medium uppercase tracking-[0.05em]">
                 Style
               </label>
               <select
                 value={style}
                 onChange={(e) => setStyle(e.target.value)}
-                className="w-full p-2 bg-gray-800 rounded"
+                className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-xs outline-none focus:border-white/[0.15] transition-colors cursor-pointer"
               >
-                <option value="DSLR, 85mm lens, shallow depth of field, soft natural lighting, sharp focus on subject">
+                <option value="DSLR, 85mm lens, shallow depth of field, soft natural lighting, sharp focus on subject" className="bg-[#0f1219]">
                   Portrait
                 </option>
-                <option value="wide angle lens, 16mm, deep depth of field, natural lighting, highly detailed">
+                <option value="wide angle lens, 16mm, deep depth of field, natural lighting, highly detailed" className="bg-[#0f1219]">
                   Landscape
                 </option>
-                <option value="cinematic lighting, anamorphic lens, film still, dramatic shadows, depth of field">
+                <option value="cinematic lighting, anamorphic lens, film still, dramatic shadows, depth of field" className="bg-[#0f1219]">
                   Cinematic
                 </option>
-                <option value="macro lens, studio lighting, ultra sharp, clean background, high detail">
-                  Product / Close-up
+                <option value="macro lens, studio lighting, ultra sharp, clean background, high detail" className="bg-[#0f1219]">
+                  Product
                 </option>
               </select>
             </div>
 
-            <div className="mb-3 sm:mb-0">
-              <label className="text-sm text-gray-400 block mb-1 text-start">
-                Aspect Ratio
+            <div>
+              <label className="text-[10px] text-gray-400 block mb-1 font-medium uppercase tracking-[0.05em]">
+                Ratio
               </label>
               <select
                 value={aspectRatio}
                 onChange={(e) => setAspectRatio(e.target.value)}
-                className="w-full p-2 bg-gray-800 rounded"
+                className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-xs outline-none focus:border-white/[0.15] transition-colors cursor-pointer"
               >
-                <option value="1:1">1:1</option>
-                <option value="16:9">16:9</option>
+                <option value="1:1" className="bg-[#0f1219]">1:1 Square</option>
+                <option value="16:9" className="bg-[#0f1219]">16:9 Widescreen</option>
               </select>
             </div>
 
-            <div className="flex justify-end w-full">
+            <div className="col-span-2 sm:col-span-1">
               <Button
+                type="button"
                 onClick={handleGenerate}
-                variant="generator"
                 disabled={isGenerating}
-                className="bg-blue-500 hover:bg-blue-600 text-white text-lg px-10 flex items-center gap-x-2"
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm h-10 w-full rounded-xl transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 cursor-pointer"
               >
-                {isGenerating ? (
-                  <>
-                    <Spinner />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <RiImageCircleAiFill />
-                    Generate
-                  </>
-                )}
+                <LuWand size={15} />
+                <span>Generate</span>
               </Button>
             </div>
           </div>
         </div>
+
+        {/* Keyboard shortcut hint */}
+        <p className="text-[11px] text-gray-500 mt-5 hidden sm:block">
+          Press Enter to generate • Shift+Enter for new line
+        </p>
       </div>
     </DefaultLayout>
   );

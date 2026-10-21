@@ -65,105 +65,123 @@ function NotificationsPage() {
 
   return (
     <DefaultLayout>
-      <div className="px-4 pt-4">
-        <h2 className="text-start">Notifications</h2>
-        <Bread.Breadcrumb>
-          <Bread.BreadcrumbList>
-            <Bread.BreadcrumbItem>
-              <Bread.BreadcrumbLink href="/">Home</Bread.BreadcrumbLink>
-            </Bread.BreadcrumbItem>
-            <Bread.BreadcrumbSeparator />
-            <Bread.BreadcrumbItem>
-              <Bread.BreadcrumbLink href="/notification">
-                Notification
-              </Bread.BreadcrumbLink>
-            </Bread.BreadcrumbItem>
-          </Bread.BreadcrumbList>
-        </Bread.Breadcrumb>
-      </div>
-      <div className="w-full flex justify-end p-2">
-        <Button
-          variant="create_new"
-          onClick={() => markAllMutation.mutate()}
-          disabled={markAllMutation.isPending}
-        >
-          {markAllMutation.isPending ? "Updating..." : "Mark all as read"}
-        </Button>
-      </div>
-      <Table.Table>
-        <Table.TableHeader>
-          <Table.TableRow className="text-lg">
-            <Table.TableHead>Message</Table.TableHead>
-            <Table.TableHead className="text-center">Date&Time</Table.TableHead>
-            <Table.TableHead className="text-center">Status</Table.TableHead>
-            <Table.TableHead className="text-center">Action</Table.TableHead>
-          </Table.TableRow>
-        </Table.TableHeader>
-        <Table.TableBody>
-          {notifications.length === 0 && (
-            <Table.TableRow>
-              <Table.TableCell colSpan={4} className="text-center py-10 text-gray-400">
-                No notifications
-              </Table.TableCell>
-            </Table.TableRow>
+      <div className="h-full overflow-y-auto px-4 sm:px-8 py-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
+              Notifications
+            </h1>
+            <Bread.Breadcrumb>
+              <Bread.BreadcrumbList>
+                <Bread.BreadcrumbItem>
+                  <Bread.BreadcrumbLink href="/">Home</Bread.BreadcrumbLink>
+                </Bread.BreadcrumbItem>
+                <Bread.BreadcrumbSeparator />
+                <Bread.BreadcrumbItem>
+                  <Bread.BreadcrumbLink href="/notification">
+                    Notifications
+                  </Bread.BreadcrumbLink>
+                </Bread.BreadcrumbItem>
+              </Bread.BreadcrumbList>
+            </Bread.Breadcrumb>
+          </div>
+          {notifications.length > 0 && (
+            <Button
+              variant="create_new"
+              onClick={() => markAllMutation.mutate()}
+              disabled={markAllMutation.isPending}
+              className="w-fit"
+            >
+              {markAllMutation.isPending ? "Updating..." : "Mark all as read"}
+            </Button>
           )}
+        </div>
 
-          {notifications.map((n) => {
-            const isUnread = !n.isRead;
+        <div className="rounded-2xl border border-white/[0.08] bg-[#0c0f18]/60 backdrop-blur-md overflow-hidden shadow-xl">
+          <div className="overflow-x-auto w-full">
+            <Table.Table>
+              <Table.TableHeader className="bg-white/[0.02] border-b border-white/[0.06]">
+                <Table.TableRow className="hover:bg-transparent">
+                  <Table.TableHead className="py-3.5 px-4 sm:px-6 text-xs text-gray-400">Message</Table.TableHead>
+                  <Table.TableHead className="py-3.5 px-4 sm:px-6 text-xs text-gray-400 text-center">Date & Time</Table.TableHead>
+                  <Table.TableHead className="py-3.5 px-4 sm:px-6 text-xs text-gray-400 text-center">Status</Table.TableHead>
+                  <Table.TableHead className="py-3.5 px-4 sm:px-6 text-xs text-gray-400 text-right">Action</Table.TableHead>
+                </Table.TableRow>
+              </Table.TableHeader>
+              <Table.TableBody>
+                {notifications.length === 0 && (
+                  <Table.TableRow>
+                    <Table.TableCell colSpan={4} className="text-center py-12 text-sm text-gray-500">
+                      No notifications
+                    </Table.TableCell>
+                  </Table.TableRow>
+                )}
 
-            return (
-              <Table.TableRow
-                key={n._id}
-                className={`border-b text-lg ${
-                  isUnread ? "bg-blue-900/20 font-semibold" : "bg-transparent"
-                }`}
-              >
-                <Table.TableCell className="py-4 px-4 text-start">
-                  {n.message}
-                </Table.TableCell>
-                <Table.TableCell className="py-4 px-4">
-                  {new Date(n.createdAt).toLocaleString()}
-                </Table.TableCell>
-                <Table.TableCell className="py-4 px-4">{n.type}</Table.TableCell>
-                <Table.TableCell className="flex gap-2 py-4 justify-end">
-                  {n.type === "PROJECT_INVITE" && (
-                    <Button
-                      variant="create_new"
-                      size="sm"
-                      disabled={acceptMutation.isPending}
-                      onClick={() => acceptMutation.mutate(n.data.inviteId)}
+                {notifications.map((n) => {
+                  const isUnread = !n.isRead;
+
+                  return (
+                    <Table.TableRow
+                      key={n._id}
+                      className={`border-b border-white/[0.04] transition-colors ${
+                        isUnread ? "bg-blue-500/[0.06] font-medium" : "hover:bg-white/[0.02]"
+                      }`}
                     >
-                      Accept
-                    </Button>
-                  )}
+                      <Table.TableCell className="py-4 px-4 sm:px-6 text-start text-sm text-gray-200">
+                        {n.message}
+                      </Table.TableCell>
+                      <Table.TableCell className="py-4 px-4 sm:px-6 text-center text-xs text-gray-400 whitespace-nowrap">
+                        {new Date(n.createdAt).toLocaleString()}
+                      </Table.TableCell>
+                      <Table.TableCell className="py-4 px-4 sm:px-6 text-center text-xs text-gray-400">
+                        <span className="border border-white/[0.08] bg-white/[0.02] px-2.5 py-1 rounded-full text-[11px] font-mono">
+                          {n.type}
+                        </span>
+                      </Table.TableCell>
+                      <Table.TableCell className="py-4 px-4 sm:px-6">
+                        <div className="flex gap-2 justify-end">
+                          {n.type === "PROJECT_INVITE" && (
+                            <Button
+                              variant="create_new"
+                              size="sm"
+                              disabled={acceptMutation.isPending}
+                              onClick={() => acceptMutation.mutate(n.data.inviteId)}
+                            >
+                              Accept
+                            </Button>
+                          )}
 
-                  {n.type === "PROJECT_INVITE" && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      disabled={rejectMutation.isPending}
-                      onClick={() => rejectMutation.mutate(n.data.inviteId)}
-                    >
-                      Reject
-                    </Button>
-                  )}
+                          {n.type === "PROJECT_INVITE" && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={rejectMutation.isPending}
+                              onClick={() => rejectMutation.mutate(n.data.inviteId)}
+                            >
+                              Reject
+                            </Button>
+                          )}
 
-                  {!n.isRead && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={markReadMutation.isPending}
-                      onClick={() => markReadMutation.mutate(n._id)}
-                    >
-                      Mark as read
-                    </Button>
-                  )}
-                </Table.TableCell>
-              </Table.TableRow>
-            );
-          })}
-        </Table.TableBody>
-      </Table.Table>
+                          {!n.isRead && (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              disabled={markReadMutation.isPending}
+                              onClick={() => markReadMutation.mutate(n._id)}
+                            >
+                              Mark read
+                            </Button>
+                          )}
+                        </div>
+                      </Table.TableCell>
+                    </Table.TableRow>
+                  );
+                })}
+              </Table.TableBody>
+            </Table.Table>
+          </div>
+        </div>
+      </div>
     </DefaultLayout>
   );
 }

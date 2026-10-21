@@ -4,8 +4,8 @@ type Props = {
 
 const AuthLayout = ({ children }: Props) => {
   return (
-    <div className="h-screen flex bg-black">
-      <div className="flex-1 flex items-center justify-center p-6">
+    <div className="min-h-screen w-full flex bg-[#080b12] overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
         {children}
       </div>
     </div>

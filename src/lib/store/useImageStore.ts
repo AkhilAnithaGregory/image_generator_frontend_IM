@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useProjectStore } from "./useProjectStore";
 
 type ImageItem = {
   id: string;
@@ -32,18 +33,22 @@ interface ImageStoreState {
   previousImage: string | null;
   uploadedImages: ImageItem[];
   drawingImage: string | null;
+  editingImageId: string | null;
 
   setGraph: (nodes: NodeItem[], edges: EdgeItem[]) => void;
   addImage: (image: ImageItem) => void;
   setSelectedNodeId: (id: string | null) => void;
   setLastGeneratedImage: (img: string | null) => void;
+  setEditingImageId: (id: string | null) => void;
+  clearEditing: () => void;
   revertCurrentImage: (currentImg: ImageItem | null) => void;
+  resetImageSelection: () => void;
   reset: () => void;
 }
 
 export const useImageStore = create<ImageStoreState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       images: [],
       nodes: [],
       edges: [],
@@ -54,6 +59,7 @@ export const useImageStore = create<ImageStoreState>()(
       previousImage: null,
       uploadedImages: [],
       drawingImage: null,
+      editingImageId: null,
 
       setGraph: (nodes: NodeItem[], edges: EdgeItem[]) =>
         set(() => ({
@@ -77,27 +83,54 @@ export const useImageStore = create<ImageStoreState>()(
           lastGeneratedImage: img,
         })),
 
+      setEditingImageId: (id: string | null) =>
+        set({
+          editingImageId: id,
+        }),
+
+      clearEditing: () =>
+        set({
+          editingImageId: null,
+        }),
+
       resetImageSelection: () =>
         set({
           selectedNodeId: null,
           lastGeneratedImage: null,
+          editingImageId: null,
         }),
         
-      revertCurrentImage: (currentImg: ImageItem | null) =>
-        set((state) => {
-          if (!currentImg) return state;
+      revertCurrentImage: (currentImg: ImageItem | null) => {
+        const projectStore = useProjectStore.getState();
+        const currentProject = projectStore.projects.find(
+          (p) => p.id === projectStore.currentProjectId
+        );
+        if (!currentProject || !currentProject.images.length) return;
 
-          const index = state.images.findIndex((img) => img.id === currentImg.id);
-          if (index === -1) return state;
+        const target =
+          currentImg ||
+          (get().selectedNodeId
+            ? currentProject.images.find((img) => img.id === get().selectedNodeId)
+            : null) ||
+          currentProject.images[currentProject.images.length - 1];
 
-          const newImages = state.images.slice(0, index);
-          const newLast = newImages.length ? newImages[newImages.length - 1] : null;
+        if (!target) return;
 
-          return {
-            images: newImages,
-            lastGeneratedImage: newLast?.src ?? null,
-          } as Partial<ImageStoreState> as ImageStoreState;
-        }),
+        const parent = target.parentId
+          ? currentProject.images.find((img) => img.id === target.parentId)
+          : null;
+        const idx = currentProject.images.findIndex((img) => img.id === target.id);
+        const prev = parent || (idx > 0 ? currentProject.images[idx - 1] : null);
+
+        projectStore.removeImageFromProject(target.id);
+        projectStore.setHasUnsavedChanges(true);
+
+        set({
+          selectedNodeId: prev?.id ?? null,
+          lastGeneratedImage: (prev?.src as string) ?? null,
+          editingImageId: null,
+        });
+      },
 
       reset: () =>
         set({

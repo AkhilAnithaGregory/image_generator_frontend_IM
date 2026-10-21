@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useImageStore } from "@/lib/store/useImageStore";
 import { useProjectStore } from "@/lib/store/useProjectStore";
 import { createFileRoute } from "@tanstack/react-router";
@@ -30,6 +30,9 @@ function Index() {
   const { user, token } = useAuthStore();
   const isLoggedIn = !!token && !!user;
 
+  // Ref to ensure initial auto-selection only runs ONCE on first page load
+  const hasAutoLoadedRef = useRef(false);
+
   const { data: backendProjects = [] } = useQuery({
     queryKey: ["projects"],
     queryFn: api.getProjects,
@@ -37,7 +40,11 @@ function Index() {
   });
 
   useEffect(() => {
+    // Only auto-restore project on the very first mount
+    if (hasAutoLoadedRef.current) return;
+
     if (isLoggedIn && backendProjects.length === 1 && !currentProjectId) {
+      hasAutoLoadedRef.current = true;
       const project = backendProjects[0];
       const draftProjectId = `backend-${project._id}`;
 
@@ -53,12 +60,28 @@ function Index() {
         updateProjectImages(data.state.images);
         setBackendProject(project._id, project.liveBranch, data.version);
       });
+      return;
     }
 
     if (!isLoggedIn && projects.length === 1 && !currentProjectId) {
+      hasAutoLoadedRef.current = true;
       setCurrentProject(projects[0].id);
+      return;
     }
-  }, [isLoggedIn, backendProjects, projects, currentProjectId, createDraftProjectWithId, setCurrentProject, updateProjectImages, setBackendProject]);
+
+    if (currentProjectId) {
+      hasAutoLoadedRef.current = true;
+    }
+  }, [
+    isLoggedIn,
+    backendProjects,
+    projects,
+    currentProjectId,
+    createDraftProjectWithId,
+    setCurrentProject,
+    updateProjectImages,
+    setBackendProject,
+  ]);
 
   if (!currentProjectId) {
     return <UiBeforeCompile />;

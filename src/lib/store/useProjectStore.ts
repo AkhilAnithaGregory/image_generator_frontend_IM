@@ -26,6 +26,7 @@ interface ProjectStoreState {
   updateProjectImages: (images: ImageItem[]) => void;
   renameProject: (projectId: string, newName: string) => void;
   addImageToProject: (image: ImageItem) => void;
+  replaceImageInProject: (imageId: string, updatedImage: ImageItem) => void;
   deleteProject: (projectId: string) => void;
   setCurrentProject: (id: string | null) => void;
   resetProject: () => void;
@@ -80,6 +81,21 @@ export const useProjectStore = create<ProjectStoreState>()(
           projects: state.projects.map((p) =>
             p.id === state.currentProjectId
               ? { ...p, images: [...p.images, image] }
+              : p
+          ),
+          hasUnsavedChanges: true,
+        })),
+
+      replaceImageInProject: (imageId: string, updatedImage: ImageItem) =>
+        set((state) => ({
+          projects: state.projects.map((p) =>
+            p.id === state.currentProjectId
+              ? {
+                  ...p,
+                  images: p.images.map((img) =>
+                    img.id === imageId ? { ...updatedImage, id: imageId } : img
+                  ),
+                }
               : p
           ),
           hasUnsavedChanges: true,

@@ -45,76 +45,107 @@ function RouteComponent() {
 
   return (
     <DefaultLayout>
-      <div className="px-4 py-4">
-        <h2 className="text-start">Repositories</h2>
-      </div>
+      <div className="h-full overflow-y-auto px-4 sm:px-8 py-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
+              Public Repositories
+            </h1>
+            <p className="text-xs text-gray-500">Explore community prompts and fork projects into your workspace</p>
+          </div>
+          <span className="text-xs text-gray-500 bg-white/[0.04] px-3 py-1 rounded-full border border-white/[0.06] w-fit font-mono">
+            {publicProjects.length} {publicProjects.length === 1 ? "repository" : "repositories"}
+          </span>
+        </div>
 
-      <div className="p-2">
-        <Table.Table>
-          <Table.TableHeader className="bg-white text-black">
-            <Table.TableRow className="text-lg">
-              <Table.TableHead className="rounded-tl-lg text-center">
-                Sl.No
-              </Table.TableHead>
-              <Table.TableHead className="text-center">
-                Project Name
-              </Table.TableHead>
-              <Table.TableHead className="text-center">
-                Owner Name
-              </Table.TableHead>
-              <Table.TableHead className="text-center">
-                Created at
-              </Table.TableHead>
-              <Table.TableHead className="text-center rounded-tr-lg">
-                Action
-              </Table.TableHead>
-            </Table.TableRow>
-          </Table.TableHeader>
-          <Table.TableBody>
-            {publicProjects.map((p: projectType, index: number) => (
-              <Table.TableRow className="hover:bg-gray-900/50">
-                <Table.TableCell className="py-4 px-4">
-                  {index + 1}
-                </Table.TableCell>
-                <Table.TableCell className="py-4 px-4">
-                  {p.name}
-                </Table.TableCell>
-                <Table.TableCell className="py-4 px-4">
-                  {p.owner.username}
-                </Table.TableCell>
-                <Table.TableCell className="py-4 px-4">
-                  {new Date(p.createdAt).toLocaleDateString()}
-                </Table.TableCell>
-                <Table.TableCell className="py-4 px-4">
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleForkClick(p)}
-                  >
-                    <FaCodeFork /> Fork
-                  </Button>
-                </Table.TableCell>
-              </Table.TableRow>
-            ))}
-          </Table.TableBody>
-        </Table.Table>
+        <div className="rounded-2xl border border-white/[0.08] bg-[#0c0f18]/60 backdrop-blur-md overflow-hidden shadow-xl">
+          <div className="overflow-x-auto w-full">
+            <Table.Table>
+              <Table.TableHeader className="bg-white/[0.02] border-b border-white/[0.06]">
+                <Table.TableRow className="hover:bg-transparent">
+                  <Table.TableHead className="py-3.5 px-4 sm:px-6 text-xs text-gray-400 text-center w-16">
+                    #
+                  </Table.TableHead>
+                  <Table.TableHead className="py-3.5 px-4 sm:px-6 text-xs text-gray-400">
+                    Project Name
+                  </Table.TableHead>
+                  <Table.TableHead className="py-3.5 px-4 sm:px-6 text-xs text-gray-400">
+                    Owner
+                  </Table.TableHead>
+                  <Table.TableHead className="py-3.5 px-4 sm:px-6 text-xs text-gray-400 text-center">
+                    Created At
+                  </Table.TableHead>
+                  <Table.TableHead className="py-3.5 px-4 sm:px-6 text-xs text-gray-400 text-right">
+                    Action
+                  </Table.TableHead>
+                </Table.TableRow>
+              </Table.TableHeader>
+              <Table.TableBody>
+                {publicProjects.length === 0 ? (
+                  <Table.TableRow>
+                    <Table.TableCell colSpan={5} className="h-32 text-center text-sm text-gray-500">
+                      No public repositories found.
+                    </Table.TableCell>
+                  </Table.TableRow>
+                ) : (
+                  publicProjects.map((p: projectType, index: number) => (
+                    <Table.TableRow
+                      key={p._id || index}
+                      className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+                    >
+                      <Table.TableCell className="py-4 px-4 sm:px-6 text-center text-xs text-gray-500 font-mono">
+                        {index + 1}
+                      </Table.TableCell>
+                      <Table.TableCell className="py-4 px-4 sm:px-6 font-medium text-white text-sm">
+                        {p.name}
+                      </Table.TableCell>
+                      <Table.TableCell className="py-4 px-4 sm:px-6 text-xs text-gray-400">
+                        {p.owner?.username || "Anonymous"}
+                      </Table.TableCell>
+                      <Table.TableCell className="py-4 px-4 sm:px-6 text-center text-xs text-gray-500 whitespace-nowrap">
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </Table.TableCell>
+                      <Table.TableCell className="py-4 px-4 sm:px-6 text-right">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleForkClick(p)}
+                          className="gap-1.5 text-xs bg-white/[0.04] border border-white/[0.08] hover:bg-blue-500/10 hover:border-blue-500/30 hover:text-blue-400 text-gray-300 rounded-xl cursor-pointer"
+                        >
+                          <FaCodeFork size={12} /> Fork
+                        </Button>
+                      </Table.TableCell>
+                    </Table.TableRow>
+                  ))
+                )}
+              </Table.TableBody>
+            </Table.Table>
+          </div>
+        </div>
       </div>
 
       <Dialog.Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <Dialog.DialogContent className="bg-white">
-          <span className="text-black text-xl">Fork this project?</span>
-          <p className="text-sm text-gray-600">
-            Are you sure you want to fork{" "}
-            <strong>{selectedProject?.name}</strong>?
+        <Dialog.DialogContent className="bg-[#0f131d] border border-white/[0.08] text-white max-w-sm rounded-2xl shadow-2xl p-6">
+          <Dialog.DialogHeader>
+            <Dialog.DialogTitle className="text-base font-semibold text-white">Fork Project</Dialog.DialogTitle>
+          </Dialog.DialogHeader>
+          <p className="text-xs text-gray-400 my-2">
+            Are you sure you want to fork <strong className="text-white">{selectedProject?.name}</strong> to your workspace?
           </p>
-          <div className="flex items-center gap-x-2 justify-end">
+          <div className="flex items-center gap-2 justify-end mt-4">
             <Button
-              variant="destructive"
-              className="w-20"
+              variant="outline"
+              size="sm"
+              className="text-xs bg-white/[0.04] border-white/[0.08] text-gray-400 hover:text-white rounded-xl"
               onClick={() => setShowDialog(false)}
             >
               Cancel
             </Button>
-            <Button variant="secondary" className="w-30" onClick={confirmFork}>
+            <Button
+              size="sm"
+              className="text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-xl"
+              onClick={confirmFork}
+            >
               Yes, Fork
             </Button>
           </div>
