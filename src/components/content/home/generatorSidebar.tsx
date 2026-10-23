@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { IoCloudUploadOutline, IoCloudDownloadOutline, IoClose } from "react-icons/io5";
+import {
+  IoCloudUploadOutline,
+  IoCloudDownloadOutline,
+  IoClose,
+} from "react-icons/io5";
 import { GrRevert } from "react-icons/gr";
 import { useProjectStore } from "@/lib/store/useProjectStore";
 import { useImageStore } from "@/lib/store/useImageStore";
@@ -216,8 +220,11 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
       ? projectImages.find((img) => img.id === currentImg.parentId)
       : null;
 
-    const targetIndex = projectImages.findIndex((img) => img.id === currentImg.id);
-    const fallbackPrevImg = targetIndex > 0 ? projectImages[targetIndex - 1] : null;
+    const targetIndex = projectImages.findIndex(
+      (img) => img.id === currentImg.id,
+    );
+    const fallbackPrevImg =
+      targetIndex > 0 ? projectImages[targetIndex - 1] : null;
     const previousVersion = parentImg || fallbackPrevImg;
 
     // Delete the currently selected image from project
@@ -303,8 +310,6 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
       formData.append("previousImage", blob, "previous-image.png");
     }
 
-
-
     try {
       setIsGenerating(true);
 
@@ -317,8 +322,8 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
 
       // Guard: never set parentId to the image's own ID
       const effectiveParentId = editingImageId
-        ? (editingImage?.parentId || null)
-        : (selectedNodeId || projectImages[projectImages.length - 1]?.id || null);
+        ? editingImage?.parentId || null
+        : selectedNodeId || projectImages[projectImages.length - 1]?.id || null;
 
       const newId = editingImageId || `node-${Date.now()}`;
 
@@ -452,15 +457,13 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
 
         <select
           id="project-select"
-          value={
-            isLoggedIn
-              ? backendProjectId || ""
-              : currentProjectId || ""
-          }
+          value={isLoggedIn ? backendProjectId || "" : currentProjectId || ""}
           onChange={handleProjectSelect}
-          className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm outline-none focus:border-white/[0.15] transition-colors cursor-pointer"
+          className="w-full p-2.5 bg-white/4 border border-white/[0.08] rounded-xl text-white text-sm outline-none focus:border-white/[0.15] transition-colors cursor-pointer"
         >
-          <option value="" className="bg-[#0f1219]">Select Project</option>
+          <option value="" className="bg-[#0f1219]">
+            Select Project
+          </option>
           {normalizedProjects.map((p: any) => (
             <option key={p.id} value={p.id} className="bg-[#0f1219]">
               {p.name}
@@ -474,7 +477,9 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
         <div className="mx-4 mt-3 px-3.5 py-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between animate-fade-in">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            <span className="text-xs font-medium text-amber-300">Editing History Image</span>
+            <span className="text-xs font-medium text-amber-300">
+              Editing History Image
+            </span>
           </div>
           <button
             onClick={clearEditing}
@@ -493,7 +498,9 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             <label className="text-[11px] font-medium uppercase tracking-[0.08em] text-gray-500">
               Prompt
             </label>
-            <span className="text-[10px] text-gray-600 font-mono">{prompt.length} chars</span>
+            <span className="text-[10px] text-gray-600 font-mono">
+              {prompt.length} chars
+            </span>
           </div>
           <textarea
             id="prompt-input"
@@ -507,12 +514,8 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             }}
             placeholder="A cinematic cybernetic samurai in neo-tokyo..."
             rows={4}
-            className="w-full p-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm placeholder:text-gray-600 outline-none focus:border-white/[0.15] resize-none transition-colors leading-relaxed"
+            className="w-full p-3 bg-white/4 border border-white/8 rounded-xl text-white text-sm placeholder:text-gray-600 outline-none focus:border-white/[0.15] resize-none transition-colors leading-relaxed"
           />
-          <p className="text-[10px] text-gray-500 mt-1.5 flex items-center justify-between">
-            <span>Press Enter to generate</span>
-            <span>Shift+Enter for new line</span>
-          </p>
         </div>
 
         {/* AI Model Selector */}
@@ -524,9 +527,12 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             id="model"
             value={modelName}
             onChange={(e) => setModelName(e.target.value)}
-            className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm outline-none focus:border-white/[0.15] transition-colors"
+            className="w-full p-2.5 bg-white/4 border border-white/8 rounded-xl text-white text-sm outline-none focus:border-white/15 transition-colors"
           >
-            <option value="gemini-3.1-flash-image-preview" className="bg-[#0f1219]">
+            <option
+              value="gemini-3.1-flash-image-preview"
+              className="bg-[#0f1219]"
+            >
               Gemini 3.1 Flash (Fast & Sharp)
             </option>
             <option value="gemini-2.5-flash-image" className="bg-[#0f1219]">
@@ -544,7 +550,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             id="style-preset"
             value={style}
             onChange={(e) => setStyle(e.target.value)}
-            className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm outline-none focus:border-white/[0.15] transition-colors cursor-pointer"
+            className="w-full p-2.5 bg-white/4 border border-white/8 rounded-xl text-white text-sm outline-none focus:border-white/15 transition-colors cursor-pointer"
           >
             <option
               value="DSLR, 85mm lens, shallow depth of field, soft natural lighting, sharp focus on subject"
@@ -603,11 +609,17 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
             id="aspect"
             value={aspectRatio}
             onChange={(e) => setAspectRatio(e.target.value)}
-            className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm outline-none focus:border-white/[0.15] transition-colors"
+            className="w-full p-2.5 bg-white/4 border border-white/[0.08] rounded-xl text-white text-sm outline-none focus:border-white/[0.15] transition-colors"
           >
-            <option value="1:1" className="bg-[#0f1219]">1:1 Square</option>
-            <option value="3:4" className="bg-[#0f1219]">3:4 Portrait</option>
-            <option value="16:9" className="bg-[#0f1219]">16:9 Widescreen</option>
+            <option value="1:1" className="bg-[#0f1219]">
+              1:1 Square
+            </option>
+            <option value="3:4" className="bg-[#0f1219]">
+              3:4 Portrait
+            </option>
+            <option value="16:9" className="bg-[#0f1219]">
+              16:9 Widescreen
+            </option>
           </select>
         </div>
       </div>
@@ -649,7 +661,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
 
         {/* Upload reference button */}
         <div className="relative">
-          <Button className="w-full bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] text-gray-300 transition-colors rounded-xl py-2.5">
+          <Button className="w-full bg-white/4 border border-white/[0.08] hover:bg-white/[0.06] text-gray-300 transition-colors rounded-xl py-2.5">
             <LuImagePlus size={16} />
             <span className="ml-2">Upload Reference ({images.length}/4)</span>
           </Button>
@@ -666,20 +678,29 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
         <Button
           onClick={handleSubmit}
           disabled={isGenerating}
-          className={`w-full py-3 rounded-xl transition-all font-medium text-sm flex items-center justify-center shadow-lg cursor-pointer ${isEditMode
-            ? "bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20"
-            : "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20"
-            }`}
+          className={`w-full py-3 rounded-xl transition-all font-medium text-sm flex items-center justify-center shadow-lg cursor-pointer ${
+            isEditMode
+              ? "bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20"
+              : "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20"
+          }`}
         >
           {isGenerating ? (
             <>
               <Spinner />
-              <span className="ml-2">{isEditMode ? "Updating..." : "Creating..."}</span>
+              <span className="ml-2">
+                {isEditMode ? "Updating..." : "Creating..."}
+              </span>
             </>
           ) : (
             <>
-              {isEditMode ? <LuPencil size={16} /> : <RiImageCircleAiFill size={16} />}
-              <span className="ml-2">{isEditMode ? "Update Image" : "Generate"}</span>
+              {isEditMode ? (
+                <LuPencil size={16} />
+              ) : (
+                <RiImageCircleAiFill size={16} />
+              )}
+              <span className="ml-2">
+                {isEditMode ? "Update Image" : "Generate"}
+              </span>
             </>
           )}
         </Button>
@@ -690,7 +711,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
           <Button
             type="button"
             onClick={() => setShowNewConfirm(true)}
-            className="bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-gray-300 text-xs rounded-xl py-2.5 transition-colors flex items-center justify-center"
+            className="bg-white/4 border border-white/[0.08] hover:bg-white/[0.08] text-gray-300 text-xs rounded-xl py-2.5 transition-colors flex items-center justify-center"
             title="Start new project"
           >
             <LuPlus size={14} />
@@ -701,7 +722,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
           <Button
             type="button"
             onClick={handleRevert}
-            className="bg-white/[0.04] border border-white/[0.08] hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-amber-400 text-gray-300 text-xs rounded-xl py-2.5 transition-colors flex items-center justify-center"
+            className="bg-white/4 border border-white/[0.08] hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-amber-400 text-gray-300 text-xs rounded-xl py-2.5 transition-colors flex items-center justify-center"
             title="Revert to previous version"
           >
             <GrRevert size={13} />
@@ -719,7 +740,7 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
               if (!currentProjectId) return;
               setShowDeleteConfirm(true);
             }}
-            className="bg-white/[0.04] border border-white/[0.08] hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 text-gray-300 text-xs rounded-xl py-2.5 transition-colors flex items-center justify-center"
+            className="bg-white/4 border border-white/[0.08] hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 text-gray-300 text-xs rounded-xl py-2.5 transition-colors flex items-center justify-center"
             title="Delete selected image"
           >
             <LuTrash2 size={14} />
@@ -734,19 +755,32 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
               type="button"
               onClick={handlePullLatest}
               disabled={isPulling || !currentBranchId || !hasRemoteChanges}
-              className="bg-white/[0.04] border border-white/[0.08] hover:bg-blue-500/10 hover:border-blue-500/20 hover:text-blue-400 text-gray-300 text-xs rounded-xl py-2.5 transition-colors flex items-center justify-center disabled:opacity-40"
-              title={hasRemoteChanges ? "Pull latest version of the selected branch" : "No remote changes to pull"}
+              className="bg-white/4 border border-white/[0.08] hover:bg-blue-500/10 hover:border-blue-500/20 hover:text-blue-400 text-gray-300 text-xs rounded-xl py-2.5 transition-colors flex items-center justify-center disabled:opacity-40"
+              title={
+                hasRemoteChanges
+                  ? "Pull latest version of the selected branch"
+                  : "No remote changes to pull"
+              }
             >
-              <IoCloudDownloadOutline size={14} className={isPulling ? "animate-spin" : ""} />
-              <span className="ml-1.5">{isPulling ? "Pulling..." : "Pull Latest"}</span>
+              <IoCloudDownloadOutline
+                size={14}
+                className={isPulling ? "animate-spin" : ""}
+              />
+              <span className="ml-1.5">
+                {isPulling ? "Pulling..." : "Pull Latest"}
+              </span>
             </Button>
 
             <Button
               type="button"
               onClick={() => setShowCommitDialog(true)}
               disabled={!hasUnsavedChanges && !!backendProjectId}
-              className="bg-white/[0.04] border border-white/[0.08] hover:bg-emerald-500/10 hover:border-emerald-500/20 hover:text-emerald-400 text-gray-300 text-xs rounded-xl py-2.5 transition-colors flex items-center justify-center disabled:opacity-40"
-              title={hasUnsavedChanges || !backendProjectId ? "Push changes to cloud branch" : "No local changes to push"}
+              className="bg-white/4 border border-white/[0.08] hover:bg-emerald-500/10 hover:border-emerald-500/20 hover:text-emerald-400 text-gray-300 text-xs rounded-xl py-2.5 transition-colors flex items-center justify-center disabled:opacity-40"
+              title={
+                hasUnsavedChanges || !backendProjectId
+                  ? "Push changes to cloud branch"
+                  : "No local changes to push"
+              }
             >
               <IoCloudUploadOutline size={14} />
               <span className="ml-1.5">Push Changes</span>
@@ -768,13 +802,16 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
       <AlertDialog open={showNewConfirm} onOpenChange={setShowNewConfirm}>
         <AlertDialogContent className="bg-[#0f131d] border border-white/[0.08] text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Start New Project?</AlertDialogTitle>
+            <AlertDialogTitle className="text-white">
+              Start New Project?
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-400">
-              This will clear the current workspace and start a fresh project. Any unsaved changes will be lost.
+              This will clear the current workspace and start a fresh project.
+              Any unsaved changes will be lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-white/[0.04] border-white/[0.08] text-gray-300 hover:bg-white/[0.08] hover:text-white">
+            <AlertDialogCancel className="bg-white/4 border-white/[0.08] text-gray-300 hover:bg-white/[0.08] hover:text-white">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -794,13 +831,16 @@ export const GeneratorSideBar: React.FC<GeneratorSideBarProps> = ({
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="bg-[#0f131d] border border-white/[0.08] text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Delete Image?</AlertDialogTitle>
+            <AlertDialogTitle className="text-white">
+              Delete Image?
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-400">
-              This will permanently remove the selected image from your project. This action cannot be undone.
+              This will permanently remove the selected image from your project.
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-white/[0.04] border-white/[0.08] text-gray-300 hover:bg-white/[0.08] hover:text-white">
+            <AlertDialogCancel className="bg-white/4 border-white/[0.08] text-gray-300 hover:bg-white/[0.08] hover:text-white">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction

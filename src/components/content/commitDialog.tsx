@@ -142,7 +142,7 @@ export const CommitDialog = ({
                 }
               }}
               autoFocus
-              className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm placeholder:text-gray-600 outline-none focus:border-white/[0.2] transition-colors"
+              className="w-full px-3.5 py-2.5 bg-white/4 border border-white/[0.08] rounded-xl text-white text-sm placeholder:text-gray-600 outline-none focus:border-white/[0.2] transition-colors"
             />
           </div>
 
@@ -172,7 +172,7 @@ export const CommitDialog = ({
             type="button"
             variant="ghost"
             onClick={handleClose}
-            className="text-gray-400 hover:text-white hover:bg-white/[0.04] text-xs rounded-xl"
+            className="text-gray-400 hover:text-white hover:bg-white/4 text-xs rounded-xl"
           >
             Cancel
           </Button>

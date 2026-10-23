@@ -66,7 +66,7 @@ function Sidebar() {
         {!!isLoggedIn && navItem("/notification", <IoIosNotificationsOutline size={20} />, "Notifications")}
 
         {/* Mobile auth button integrated in bottom row */}
-        <li className="md:hidden">
+        <li className="md:hidden mt-auto">
           {!isLoggedIn ? (
             <Link
               to="/auth/login"
@@ -86,7 +86,7 @@ function Sidebar() {
       </ul>
 
       {/* Desktop bottom auth section */}
-      <div className="hidden md:flex flex-col items-center">
+      <div className="hidden md:flex flex-col items-center mt-auto">
         {!isLoggedIn ? (
           <Tooltip>
             <TooltipTrigger asChild>

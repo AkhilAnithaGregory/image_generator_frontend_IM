@@ -48,11 +48,10 @@ function ViewProjectButton({ project }: { project: Project }) {
 
   return (
     <Button
-      variant="outline"
+      variant="secondary"
       size="sm"
       onClick={handleView}
       disabled={loading}
-      className="gap-1.5 text-xs bg-white/[0.04] border-white/[0.08] hover:bg-blue-500/10 hover:border-blue-500/30 hover:text-blue-400 text-gray-300 transition-all rounded-xl cursor-pointer"
     >
       {loading ? <Spinner size="sm" /> : <FiEye size={14} />}
       View
@@ -185,7 +184,7 @@ function RouteComponent() {
               </Bread.BreadcrumbList>
             </Bread.Breadcrumb>
           </div>
-          <span className="text-xs text-gray-500 bg-white/[0.04] px-3 py-1 rounded-full border border-white/[0.06] w-fit font-mono">
+          <span className="text-xs text-gray-500 bg-white/4 px-3 py-1 rounded-full border border-white/[0.06] w-fit font-mono">
             {projects.length} {projects.length === 1 ? "project" : "projects"}
           </span>
         </div>
@@ -215,7 +214,7 @@ function RouteComponent() {
                   table.getRowModel().rows.map((row) => (
                     <TableRow
                       key={row.id}
-                      className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+                      className="border-b border-white/4 hover:bg-white/2 transition-colors"
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell className="py-4 px-4 sm:px-6" key={cell.id}>

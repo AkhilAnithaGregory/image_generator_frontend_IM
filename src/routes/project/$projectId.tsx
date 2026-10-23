@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as Bread from "@/components/ui/breadcrumb";
 import { PullRequestsTab } from "@/components/content/project/PullRequests";
 import ProjectSettings from "@/components/content/project/ProjectSettings";
+import { CommitHistory } from "@/components/content/project/CommitHistory";
 import * as Table from "@/components/ui/table";
 
 type Branch = {
@@ -125,6 +126,7 @@ function RouteComponent() {
           <TabsList variant="line" className="overflow-x-auto max-w-full">
             <TabsTrigger value="branches">Branches</TabsTrigger>
             <TabsTrigger value="pullRequests">Pull Requests</TabsTrigger>
+            <TabsTrigger value="history">Commit history</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           <TabsContent value="branches" className="mt-4 space-y-4">
@@ -189,6 +191,13 @@ function RouteComponent() {
                   setOpen={setOpenPR}
                   projectId={projectId}
                 />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="history" className="mt-4">
+            <Card className="rounded-2xl border border-white/8 bg-[#0c0f18]/60 backdrop-blur-md overflow-hidden shadow-xl">
+              <CardContent className="p-4 text-sm text-muted-foreground">
+                <CommitHistory projectId={projectId} branches={branches} />
               </CardContent>
             </Card>
           </TabsContent>

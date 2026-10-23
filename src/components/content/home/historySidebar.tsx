@@ -125,7 +125,7 @@ export const HistorySideBar = () => {
               key={currentBranchId}
               value={currentBranchId}
               onChange={(e) => handleBranchChange(e.target.value)}
-              className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm outline-none focus:border-white/[0.15] transition-colors mb-4 cursor-pointer"
+              className="w-full p-2.5 bg-white/4 border border-white/[0.08] rounded-xl text-white text-sm outline-none focus:border-white/[0.15] transition-colors mb-4 cursor-pointer"
             >
               {branches.map((branch) => (
                 <option key={branch._id} value={branch._id} className="bg-[#0f1219]">
@@ -141,7 +141,7 @@ export const HistorySideBar = () => {
           <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-gray-500">
             Version History
           </span>
-          <span className="ml-auto text-[11px] text-gray-600 bg-white/[0.04] px-2 py-0.5 rounded-full font-mono">
+          <span className="ml-auto text-[11px] text-gray-600 bg-white/4 px-2 py-0.5 rounded-full font-mono">
             {images.length}
           </span>
         </div>
@@ -170,7 +170,7 @@ export const HistorySideBar = () => {
                     }}
                     className={`group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200 ${
                       isSelected
-                        ? "ring-1 ring-blue-500/40 bg-white/[0.04]"
+                        ? "ring-1 ring-blue-500/40 bg-white/4"
                         : "hover:bg-white/[0.03]"
                     } ${isEditing ? "ring-1 ring-amber-500/50" : ""}`}
                   >

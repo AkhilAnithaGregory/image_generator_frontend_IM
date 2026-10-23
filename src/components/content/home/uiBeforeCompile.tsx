@@ -110,10 +110,13 @@ export const UiBeforeCompile = () => {
 
       <div
         className="min-h-full w-full flex flex-col justify-center items-center text-white px-4 py-8 sm:py-14 overflow-y-auto"
-        style={{ background: "linear-gradient(180deg, #080b12 0%, #0c1018 50%, #080b12 100%)" }}
+        style={{
+          background:
+            "linear-gradient(180deg, #080b12 0%, #0c1018 50%, #080b12 100%)",
+        }}
       >
         {/* Branding */}
-        <div className="flex items-center gap-2.5 mb-3">
+        <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <LuSparkles size={18} className="text-blue-400" />
           </div>
@@ -122,17 +125,17 @@ export const UiBeforeCompile = () => {
           </span>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight text-center leading-tight mb-2.5">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight text-center leading-tight m-0">
           Turn Ideas Into Images
         </h1>
 
-        <p className="text-sm sm:text-base text-gray-400 mb-6 sm:mb-8 text-center max-w-md px-2 leading-relaxed">
+        <p className="text-sm sm:text-base text-gray-400 pb-6 sm:pb-8 text-center max-w-lg px-2 leading-relaxed">
           Generate, branch, and edit high-resolution visuals with AI.
         </p>
 
         {/* Main Creation Card */}
         <div
-          className="w-full max-w-2xl rounded-2xl p-4 sm:p-6 border border-white/[0.08] shadow-2xl backdrop-blur-xl"
+          className="w-full max-w-2xl rounded-2xl p-4 sm:p-6 border border-white/8 shadow-2xl backdrop-blur-xl"
           style={{ background: "rgba(12, 15, 23, 0.85)" }}
         >
           {/* Prompt + Upload Area */}
@@ -157,7 +160,10 @@ export const UiBeforeCompile = () => {
             ) : (
               <div className="grid grid-cols-4 sm:grid-cols-2 gap-2 sm:min-w-[112px]">
                 {images.map((img, i) => (
-                  <div key={i} className="relative group w-full aspect-square sm:w-13 sm:h-13 rounded-lg overflow-hidden border border-white/[0.08] bg-black">
+                  <div
+                    key={i}
+                    className="relative group w-full aspect-square sm:w-13 sm:h-13 rounded-lg overflow-hidden border border-white/8 bg-black"
+                  >
                     <img
                       src={img.preview}
                       className="w-full h-full object-cover"
@@ -202,7 +208,7 @@ export const UiBeforeCompile = () => {
                   }
                 }}
                 placeholder="A high-tech cyberpunk explorer in a neon-lit rainstorm, intricate reflection, cinematic 8k..."
-                className="w-full p-3 sm:p-3.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white text-sm placeholder:text-gray-600 outline-none focus:border-white/[0.2] transition-colors resize-none leading-relaxed"
+                className="w-full p-3 sm:p-3.5 bg-white/3 border border-white/8 rounded-xl text-white text-sm placeholder:text-gray-600 outline-none focus:border-white/20 transition-colors resize-none leading-relaxed"
               />
             </div>
           </div>
@@ -216,9 +222,12 @@ export const UiBeforeCompile = () => {
               <select
                 value={modelName}
                 onChange={(e) => setModelName(e.target.value)}
-                className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-xs outline-none focus:border-white/[0.15] transition-colors cursor-pointer"
+                className="w-full p-2.5 bg-white/4 border border-white/8 rounded-xl text-white text-xs outline-none focus:border-white/15 transition-colors cursor-pointer"
               >
-                <option value="gemini-3.1-flash-image-preview" className="bg-[#0f1219]">
+                <option
+                  value="gemini-3.1-flash-image-preview"
+                  className="bg-[#0f1219]"
+                >
                   Gemini 3.1 Flash
                 </option>
                 <option value="gemini-2.5-flash-image" className="bg-[#0f1219]">
@@ -234,19 +243,52 @@ export const UiBeforeCompile = () => {
               <select
                 value={style}
                 onChange={(e) => setStyle(e.target.value)}
-                className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-xs outline-none focus:border-white/[0.15] transition-colors cursor-pointer"
+                className="w-full p-2.5 bg-white/4 border border-white/8 rounded-xl text-white text-xs outline-none focus:border-white/15 transition-colors cursor-pointer"
               >
-                <option value="DSLR, 85mm lens, shallow depth of field, soft natural lighting, sharp focus on subject" className="bg-[#0f1219]">
-                  Portrait
+                <option
+                  value="DSLR, 85mm lens, shallow depth of field, soft natural lighting, sharp focus on subject"
+                  className="bg-[#0f1219]"
+                >
+                  Photorealistic
                 </option>
-                <option value="wide angle lens, 16mm, deep depth of field, natural lighting, highly detailed" className="bg-[#0f1219]">
-                  Landscape
+                <option
+                  value="futuristic cyberpunk city, neon glow, wet reflections, high contrast, atmospheric fog"
+                  className="bg-[#0f1219]"
+                >
+                  Cyberpunk
                 </option>
-                <option value="cinematic lighting, anamorphic lens, film still, dramatic shadows, depth of field" className="bg-[#0f1219]">
-                  Cinematic
+                <option
+                  value="modern anime illustration, Makoto Shinkai style, vibrant colors, detailed sky, cinematic lighting"
+                  className="bg-[#0f1219]"
+                >
+                  Anime Art
                 </option>
-                <option value="macro lens, studio lighting, ultra sharp, clean background, high detail" className="bg-[#0f1219]">
-                  Product
+                <option
+                  value="classic oil painting, textured brush strokes, moody lighting, renaissance aesthetic"
+                  className="bg-[#0f1219]"
+                >
+                  Oil Painting
+                </option>
+                <option
+                  value="3D digital art, octane render, unreal engine 5, ray tracing, studio lighting"
+                  className="bg-[#0f1219]"
+                >
+                  3D Digital / Octane
+                </option>
+                <option
+                  value="epic fantasy concept art, matte painting, highly detailed, dramatic lighting"
+                  className="bg-[#0f1219]"
+                >
+                  Fantasy Concept Art
+                </option>
+                <option
+                  value="clean minimalist vector art, flat design, bold shapes, elegant palette"
+                  className="bg-[#0f1219]"
+                >
+                  Minimalist Vector
+                </option>
+                <option value="" className="bg-[#0f1219]">
+                  None / Default
                 </option>
               </select>
             </div>
@@ -258,10 +300,17 @@ export const UiBeforeCompile = () => {
               <select
                 value={aspectRatio}
                 onChange={(e) => setAspectRatio(e.target.value)}
-                className="w-full p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-xs outline-none focus:border-white/[0.15] transition-colors cursor-pointer"
+                className="w-full p-2.5 bg-white/4 border border-white/8 rounded-xl text-white text-xs outline-none focus:border-white/15 transition-colors cursor-pointer"
               >
-                <option value="1:1" className="bg-[#0f1219]">1:1 Square</option>
-                <option value="16:9" className="bg-[#0f1219]">16:9 Widescreen</option>
+                <option value="1:1" className="bg-[#0f1219]">
+                  1:1 Square
+                </option>
+                <option value="3:4" className="bg-[#0f1219]">
+                  3:4 Portrait
+                </option>
+                <option value="16:9" className="bg-[#0f1219]">
+                  16:9 Widescreen
+                </option>
               </select>
             </div>
 
@@ -278,11 +327,6 @@ export const UiBeforeCompile = () => {
             </div>
           </div>
         </div>
-
-        {/* Keyboard shortcut hint */}
-        <p className="text-[11px] text-gray-500 mt-5 hidden sm:block">
-          Press Enter to generate • Shift+Enter for new line
-        </p>
       </div>
     </DefaultLayout>
   );

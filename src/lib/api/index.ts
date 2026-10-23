@@ -70,7 +70,7 @@ export const pullLatest = (branchId: string) => request(`/branch/${branchId}/pul
 export const createCommit = (
     branchId: string, data: { state: any; message?: string; lastKnownVersion?: number; }
 ) => requestJSON(`/commit/${branchId}`, "POST", data);
-export const getCommits = (branchId: string) => request(`/commit/${branchId}/commits`);
+export const getCommits = (branchId: string) => request(`/commit/branches/${branchId}/commits`);
 export const getCommit = (commitId: string) => request(`/commits/${commitId}`);
 export const deleteCommit = (commitId: string) => request(`/commits/${commitId}`, { method: "DELETE", });
 export const revertCommit = (commitId: string) => request(`/commits/${commitId}/revert`, { method: "POST", });

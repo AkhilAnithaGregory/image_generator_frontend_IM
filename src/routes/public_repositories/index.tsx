@@ -53,7 +53,7 @@ function RouteComponent() {
             </h1>
             <p className="text-xs text-gray-500">Explore community prompts and fork projects into your workspace</p>
           </div>
-          <span className="text-xs text-gray-500 bg-white/[0.04] px-3 py-1 rounded-full border border-white/[0.06] w-fit font-mono">
+          <span className="text-xs text-gray-500 bg-white/4 px-3 py-1 rounded-full border border-white/[0.06] w-fit font-mono">
             {publicProjects.length} {publicProjects.length === 1 ? "repository" : "repositories"}
           </span>
         </div>
@@ -110,7 +110,7 @@ function RouteComponent() {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleForkClick(p)}
-                          className="gap-1.5 text-xs bg-white/[0.04] border border-white/[0.08] hover:bg-blue-500/10 hover:border-blue-500/30 hover:text-blue-400 text-gray-300 rounded-xl cursor-pointer"
+                          className="gap-1.5 text-xs bg-white/4 border border-white/[0.08] hover:bg-blue-500/10 hover:border-blue-500/30 hover:text-blue-400 text-gray-300 rounded-xl cursor-pointer"
                         >
                           <FaCodeFork size={12} /> Fork
                         </Button>
@@ -136,7 +136,7 @@ function RouteComponent() {
             <Button
               variant="outline"
               size="sm"
-              className="text-xs bg-white/[0.04] border-white/[0.08] text-gray-400 hover:text-white rounded-xl"
+              className="text-xs bg-white/4 border-white/[0.08] text-gray-400 hover:text-white rounded-xl"
               onClick={() => setShowDialog(false)}
             >
               Cancel

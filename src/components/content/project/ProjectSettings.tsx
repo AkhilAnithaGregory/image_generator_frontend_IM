@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -12,6 +12,7 @@ import * as Table from "@/components/ui/table";
 function ProjectSettings({ projectId }: { projectId: string }) {
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
+  const [projectName, setProjectName] = useState("");
 
   const { data: project } = useQuery({
     queryKey: ["project", projectId],
@@ -39,6 +40,18 @@ function ProjectSettings({ projectId }: { projectId: string }) {
   });
 
   const isOwner = collaboratorsData?.owner?._id === user?.id;
+
+  useEffect(() => {
+    if (project?.project?.name) setProjectName(project.project.name);
+  }, [project?.project?.name]);
+
+  const renameProject = useMutation({
+    mutationFn: () => api.updateProject(projectId, { name: projectName.trim() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
 
   const updateVisibility = useMutation({
     mutationFn: ({
@@ -69,6 +82,43 @@ function ProjectSettings({ projectId }: { projectId: string }) {
 
   return (
     <div className="space-y-8 text-xl">
+      {isOwner && (
+        <section className="space-y-3">
+          <h3 className="text-start text-2xl text-white">Project name</h3>
+          <form
+            className="flex flex-col sm:flex-row gap-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              renameProject.mutate();
+            }}
+          >
+            <input
+              value={projectName}
+              onChange={(event) => setProjectName(event.target.value)}
+              aria-label="Project name"
+              maxLength={100}
+              className="min-w-0 flex-1 px-3 py-2 bg-gray-900 border border-white/10 rounded-md text-base text-white"
+            />
+            <Button
+              type="submit"
+              variant="create_new"
+              disabled={
+                renameProject.isPending ||
+                !projectName.trim() ||
+                projectName.trim() === project.project.name
+              }
+            >
+              {renameProject.isPending ? "Saving..." : "Save name"}
+            </Button>
+          </form>
+          {renameProject.error && (
+            <p role="alert" className="text-sm text-red-400">
+              {(renameProject.error as Error).message}
+            </p>
+          )}
+        </section>
+      )}
+
       <p className="text-start pb-3 text-2xl text-white">
         Collaborators and teams
       </p>

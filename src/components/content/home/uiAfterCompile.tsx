@@ -119,7 +119,7 @@ export const UiAfterCompile = ({ revertCurrentImage }: { revertCurrentImage?: (i
             onClick={() => setMobileTab("generator")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${mobileTab === "generator"
                 ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
+                : "text-gray-400 hover:text-white hover:bg-white/4"
               }`}
           >
             <LuSlidersHorizontal size={13} />
@@ -131,7 +131,7 @@ export const UiAfterCompile = ({ revertCurrentImage }: { revertCurrentImage?: (i
             onClick={() => setMobileTab("canvas")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${mobileTab === "canvas"
                 ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
+                : "text-gray-400 hover:text-white hover:bg-white/4"
               }`}
           >
             <LuImage size={13} />
@@ -143,7 +143,7 @@ export const UiAfterCompile = ({ revertCurrentImage }: { revertCurrentImage?: (i
             onClick={() => setMobileTab("history")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${mobileTab === "history"
                 ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
+                : "text-gray-400 hover:text-white hover:bg-white/4"
               }`}
           >
             <LuHistory size={13} />
